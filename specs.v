@@ -29,7 +29,7 @@ From ORACLE Require Export protocolV2.
 Fixpoint credit_non_negative_all_consumers (allConsumers : AllConsumers) : Prop :=
     match (allConsumers) with
     | nil => True
-    | (_, info) :: allConsumers' => ((0 <=? info.(Credit)) = true) /\ 
+    | (_, info) :: allConsumers' => ((0 <=? info.(credit)) = true) /\ 
                                     (credit_non_negative_all_consumers (allConsumers'))
     end.
 
@@ -38,7 +38,7 @@ Fixpoint credit_non_negative_all_consumers (allConsumers : AllConsumers) : Prop 
  * a single consumer to be non-negative.
  *)
 Definition credit_non_negative_single_consumer (info : ConsumerInfo) : Prop :=
-    ((0 <=? info.(Credit))) = true.
+    ((0 <=? info.(credit))) = true.
 
 
 
@@ -104,34 +104,31 @@ Theorem credit_non_negative : forall (event : Events) (state : State),
     (credit_non_negative_all_consumers (get_consumers (state))) -> 
     (credit_non_negative_all_consumers (get_consumers (execute (state) (event)))).
 Proof.
-    intros.
-    destruct state as 
-    [[[[[[[[[[[[[[Data totalCost] totalRevenue] writes] reads] baseFee] 
-    maxFee] maxFeeNext] maxFeeTimelock] latestCost] latestWrite] 
-    totalCredit] allConsumers] params] trace]. destruct params as [[caller descrip] timelock].
+    intros. destruct state. destruct oracleState. destruct oracleParameters.
     destruct event. simpl in H.
-    + simpl. case_eq (compare_address caller caller0).
-        intros. simpl. apply H.
-        intros. simpl. apply H.
-    + simpl. 
-      case_eq ((Credit (get_consumer_info allConsumers consumer) <?
-      fee_of consumer (Weight (get_consumer_info allConsumers consumer))
-      allConsumers latestWrite baseFee)).
+    + simpl. unfold write_data. case_eq (compare_address owner caller).
+        intros. simpl. rewrite -> H0. unfold get_consumers. simpl. unfold get_consumers in H. simpl in H. apply H.
+        intros. simpl. rewrite -> H0. unfold get_consumers. simpl. unfold get_consumers in H. simpl in H. apply H.
+    + simpl. unfold read_data. simpl. simpl.
+      case_eq (credit (get_consumer_info allConsumers consumer) <?
+      fee_of consumer
+      (defs.weight (get_consumer_info allConsumers consumer))
+      allConsumers latestWrite baseFee).
         intros. simpl. simpl in H. apply H.
         intros. simpl. apply credit_non_negative_helper1.
             unfold credit_non_negative_single_consumer.
             simpl. reflexivity.
             simpl in H. apply H.
             simpl. reflexivity.
-    + simpl. case_eq (compare_address caller caller0).
+    + simpl. unfold schedule_weight_adjustment. simpl. case_eq (compare_address owner caller).
         intros. simpl. apply credit_non_negative_helper1.
             unfold credit_non_negative_single_consumer.
             simpl. reflexivity.
             simpl in H. apply H.
             simpl. reflexivity.
             intros. simpl. simpl in H. apply H.
-    + simpl. case_eq (compare_address caller caller0).
-      case_eq (timeStamp <? WeightTimeLock (get_consumer_info allConsumers consumer)).
+    + simpl. unfold adjust_weight. simpl. case_eq (compare_address owner caller).
+      case_eq (timeStamp0 <? weightTimeLock (get_consumer_info allConsumers consumer)).
         intros. simpl. simpl in H. apply H.
         intros. simpl. apply credit_non_negative_helper1.
             unfold credit_non_negative_single_consumer.
@@ -139,18 +136,18 @@ Proof.
             simpl in H. apply H.
             simpl. reflexivity.
             intros. simpl. simpl in H. apply H.
-    + simpl. case_eq (compare_address caller caller0).
+    + simpl. unfold schedule_max_fee_adjustment. simpl. case_eq (compare_address owner caller).
         intros. simpl. simpl in H. apply H.
         intros. simpl. simpl in H. apply H.
-    + simpl. case_eq (compare_address caller caller0).
-        intros. case_eq (timeStamp <? maxFeeTimelock).
+    + simpl. unfold adjust_max_fee. simpl. case_eq (compare_address owner caller).
+        intros. case_eq (timeStamp0 <? maxFeeTimeLock).
             intros. simpl. simpl in H. apply H.
             intros. simpl. simpl in H. apply H.
         intros. simpl. simpl in H. apply H.
-    + simpl. case_eq (compare_address caller caller0).
+    + simpl. unfold adjust_base_fee. simpl. case_eq (compare_address owner caller).
         intros. simpl. simpl in H. apply H.
         intros. simpl. simpl in H. apply H.
-    + simpl. simpl in H. case_eq (Weight (get_consumer_info allConsumers consumer) =? 0).
+    + simpl. simpl in H. unfold deposit_credit. simpl. case_eq (weight (get_consumer_info allConsumers consumer) =? 0).
         intros. simpl. split.
             reflexivity.
             simpl in H. apply H.
@@ -158,18 +155,18 @@ Proof.
             simpl. unfold credit_non_negative_single_consumer. simpl. reflexivity.
             apply H.
             simpl. reflexivity.
-    + simpl. case_eq (Credit (get_consumer_info allConsumers caller0) <? amount).
+    + simpl. unfold withdraw_credit. simpl. case_eq (credit (get_consumer_info allConsumers caller) <? amount).
         intros. simpl. simpl in H. apply H.
         intros. simpl. apply credit_non_negative_helper1.
             unfold credit_non_negative_single_consumer. simpl. reflexivity.
             simpl in H. apply H.
             simpl. reflexivity.
-    + simpl. case_eq (compare_address caller caller0).
+    + simpl. unfold withdraw. simpl. case_eq (compare_address owner caller).
         intros. case_eq (totalRevenue - totalCredit <? amount).
             simpl. intros. simpl in H. apply H.
             intros. simpl. simpl in H. apply H.
             intros. simpl. simpl in H. apply H.
-    + simpl. case_eq (totalRevenue <? totalCost).
+    + simpl. unfold reset_cost_and_revenue. simpl. case_eq (totalRevenue <? totalCost).
         simpl. intros. simpl in H. apply H.
         simpl. intros. simpl in H. apply H.
 Qed.
@@ -193,16 +190,16 @@ Qed.
  *)
 
 Fixpoint split_trace_helper (trace : Trace) (currState : State) (currList : list (State * Events)) : list (State * Events) :=
-match trace with
-| nil => currList
-| e :: trace' =>
-    let newState := execute (currState) (e)
-    in
-        match e with
-        | DataWritten (_) (_) (_) (_) => currList
-        | _ => split_trace_helper (trace') (newState) (currList ++ ((currState, e) :: nil))
-        end
-end.
+    match trace with
+    | nil => currList
+    | e :: trace' =>
+        let newState := execute (currState) (e)
+        in
+            match e with
+            | DataWritten (_) (_) (_) => currList
+            | _ => split_trace_helper (trace') (newState) (currList ++ ((currState, e) :: nil))
+            end
+    end.
 
 
 (*
@@ -220,7 +217,7 @@ Fixpoint split_trace (trace : Trace) (currState : State) (subLists : list (list 
         let newState := execute (currState) (e)
         in
             match e with
-            | DataWritten (_) (_) (_) (_) => split_trace (trace') (newState) (subLists ++ ((split_trace_helper (trace') (currState) (nil)) :: nil))
+            | DataWritten (_) (_) (_) => split_trace (trace') (newState) (subLists ++ ((split_trace_helper (trace') (newState) (nil)) :: nil))
             | _ => split_trace (trace') (newState) (subLists)
             end
     end.
@@ -235,7 +232,7 @@ Fixpoint split_trace_correct_prop (mergeSlice : list (State * Events)) (trace : 
         end
     | e :: trace' => 
         match e with
-        | DataWritten (_) (_) (_) (_) => split_trace_correct_prop (mergeSlice) (trace')
+        | DataWritten (_) (_) (_) => split_trace_correct_prop (mergeSlice) (trace')
         | _ => 
             match mergeSlice with
             | nil => False
@@ -249,7 +246,7 @@ Fixpoint my_remove_event (trace : list (Events)) : list (Events) :=
     | nil => nil
     | e :: trace' =>
         match e with
-        | DataWritten (_) (_) (_) (_) => my_remove_event (trace')
+        | DataWritten (_) (_) (_) => my_remove_event (trace')
         | _ => e :: (my_remove_event (trace'))
         end
     end.
@@ -295,13 +292,13 @@ Fixpoint all_consumers_pay_once_slice (slice : list (State * Events)) : Prop :=
     | nil => True
     | (state, event) :: slice' => 
         match (event) with
-        | DataRead (consumer) (timeStamp) (weight) (data) =>
+        | DataRead (consumer) (Weight) (data) =>
             let latestWrite := get_latest_write (state) in
             let consumerInfo := get_consumer_info (get_consumers (state)) (consumer) in
             let baseFee := get_base_fee (state) in
-            let weightConsumer := consumerInfo.(Weight) in
+            let weightConsumer := consumerInfo.(weight) in
             let feeConsumer := ((weightConsumer * baseFee)) in
-            let latestReadConsumer := consumerInfo.(LatestRead) in
+            let latestReadConsumer := consumerInfo.(latestRead) in
             let (totalRevenueBefore, totalRevenueAfter) := 
                 (get_total_revenue (state), get_total_revenue (execute (state) (event))) in
 
@@ -310,10 +307,10 @@ Fixpoint all_consumers_pay_once_slice (slice : list (State * Events)) : Prop :=
                  (all_consumers_pay_once_slice (slice')))) 
                 /\ 
                 (((latestWrite <? latestReadConsumer) = false) ->
-                (((((consumerInfo.(Credit) <? feeConsumer) = true) -> 
+                (((((consumerInfo.(credit) <? feeConsumer) = true) -> 
                     totalRevenueAfter = totalRevenueBefore) 
                     /\ 
-                    (((consumerInfo.(Credit) <? feeConsumer) = false) -> 
+                    (((consumerInfo.(credit) <? feeConsumer) = false) -> 
                     totalRevenueAfter = (totalRevenueBefore + feeConsumer))) /\ 
                 (all_consumers_pay_once_slice (slice'))))
         | _ => all_consumers_pay_once_slice (slice')
@@ -346,7 +343,7 @@ Fixpoint no_data_written_in_slice (slice : list (State * Events)) : Prop :=
     | nil => True
     | (_, event) :: eventHistory' => 
         match (event) with
-        | DataWritten (_) (_) (_) (_) => False
+        | DataWritten (_) (_) (_) => False
         | _ => True /\ (no_data_written_in_slice (eventHistory'))
         end
     end.
@@ -382,43 +379,54 @@ Proof.
      + simpl. inversion H.
      + simpl. split.
       * intros. split. 
-            destruct s as 
-            [[[[[[[[[[[[[[Data totalCost] totalRevenue] writes] reads] baseFee] 
-            maxFee] maxFeeNext] maxFeeTimelock] latestCost] latestWrite] 
-            totalCredit] allConsumers] params] trace]. 
-            simpl. simpl in H0. unfold fee_of.
-            case_eq ((latestWrite <? LatestRead (get_consumer_info allConsumers consumer))). 
+            unfold read_data. unfold fee_of. simpl.
+            case_eq (latestWrite (oracleState s) <?
+            latestRead
+            (get_consumer_info (allConsumers (oracleState s)) consumer)).
                 intros. simpl. apply Nat.add_0_r.
 
-                intros. rewrite -> H1 in H0. discriminate H0. 
+                intros. unfold get_latest_write in H0. unfold get_consumers in H0.
+                simpl in H0. rewrite -> H1 in H0. discriminate H0.
 
-            apply IHl'. unfold no_data_written_in_slice in H. destruct H. fold no_data_written_in_slice in H1. apply H1.
-      * intros. 
-        destruct s as 
-        [[[[[[[[[[[[[[Data totalCost] totalRevenue] writes] reads] baseFee] 
-        maxFee] maxFeeNext] maxFeeTimelock] latestCost] latestWrite] 
-        totalCredit] allConsumers] params] trace]. simpl. simpl in H0.
-        unfold fee_of.
-        case_eq ((latestWrite <? LatestRead (get_consumer_info allConsumers consumer))).
+            apply IHl'. unfold no_data_written_in_slice in H. destruct H. 
+            fold no_data_written_in_slice in H1. apply H1.
+      * intros. split.
+            split. 
+                intros. unfold read_data. unfold fee_of. simpl.
+                case_eq (latestWrite (oracleState s) <?
+                latestRead
+                (get_consumer_info (allConsumers (oracleState s)) consumer)).
+                    intros. unfold get_consumers in H0. unfold get_latest_write in H0. rewrite -> H2 in H0.
+                    discriminate.
 
-            intros. rewrite -> H1 in H0. discriminate H0.
-            intros. split. split. intros. 
-            case_eq ((Credit (get_consumer_info allConsumers consumer) <?
-            Weight (get_consumer_info allConsumers consumer) * baseFee)). 
-            
-                intros. simpl. reflexivity.
+                    intros.
+                    case_eq (credit (get_consumer_info (allConsumers (oracleState s)) consumer) <?
+                    defs.weight (get_consumer_info (allConsumers (oracleState s)) consumer) *
+                    baseFee (oracleState s)).
+                        intros. reflexivity.
 
-                intros. rewrite -> H3 in H2. discriminate H2.
+                        intros. unfold get_consumers in H1. unfold get_latest_write in H1.
+                        unfold get_base_fee in H1.
+                        rewrite -> H3 in H1. discriminate H1.
 
-                intros.
-                case_eq ((Credit (get_consumer_info allConsumers consumer) <? 
-                Weight (get_consumer_info allConsumers consumer) * baseFee)).
+                intros. unfold read_data. unfold fee_of. simpl.
+                case_eq (latestWrite (oracleState s) <?
+                latestRead
+                (get_consumer_info (allConsumers (oracleState s)) consumer)).
+                    intros. unfold get_consumers in H0. unfold get_latest_write in H0.
+                    rewrite -> H2 in H0. discriminate.
 
-                    intros. rewrite -> H2 in H3. discriminate H3.
+                    intros.
+                    case_eq (credit (get_consumer_info (allConsumers (oracleState s)) consumer) <?
+                    defs.weight (get_consumer_info (allConsumers (oracleState s)) consumer) *
+                    baseFee (oracleState s)).
+                        intros. unfold get_consumers in H1. unfold get_latest_write in H1.
+                        unfold get_base_fee in H1. rewrite -> H3 in H1. discriminate H1.
 
-                    intros. simpl. reflexivity. apply IHl'. 
-                    unfold no_data_written_in_slice in H. destruct H.
-                    fold no_data_written_in_slice in H2. apply H2.
+                        intros. unfold get_total_revenue. simpl. reflexivity.
+
+            apply IHl'. unfold no_data_written_in_slice in H. destruct H.
+            fold no_data_written_in_slice in H1. apply H1.
     + simpl. apply IHl'. 
       unfold no_data_written_in_slice in H. destruct H.
       fold no_data_written_in_slice in H0. apply H0.
@@ -623,7 +631,8 @@ Proof.
     intros trace. induction trace as [ | e l' IHl'].
     - simpl. intros. apply H.
     - intros. destruct e.
-     + simpl. apply IHl'. simpl. apply no_data_written_when_list_split_helper1. split. apply H. simpl. split. apply no_data_written_in_slice_proof. simpl. reflexivity. reflexivity.
+     + simpl. apply IHl'. simpl. apply no_data_written_when_list_split_helper1. split. apply H. simpl. split. 
+       apply no_data_written_in_slice_proof. simpl. reflexivity. reflexivity.
      + simpl. apply IHl'. apply H.
      + simpl. apply IHl'. apply H.
      + simpl. apply IHl'. apply H.
@@ -651,9 +660,6 @@ Theorem all_consumers_pay_once_proof :
     all_consumers_pay_once (split_trace (get_trace (state)) (constructor (get_owner (state)) (get_description (state)) (get_locking_period (state)) (baseFee)) (nil)).
 
 Proof.
-    intros. destruct state as 
-    [[[[[[[[[[[[[[Data totalCost] totalRevenue] writes] reads] BaseFee] 
-    maxFee] maxFeeNext] maxFeeTimelock] latestCost] latestWrite] 
-    totalCredit] allConsumers] params] trace]. destruct params as [[owner description] lockPeriod].
+    intros. destruct state. destruct oracleParameters.
     simpl. apply consumers_pay_once. apply no_data_written_when_list_split. simpl. reflexivity.
 Qed.

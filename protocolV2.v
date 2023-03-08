@@ -27,76 +27,31 @@ Definition min_nat (num1 : nat) (num2 : nat) : nat :=
         num2.
 
 Definition get_total_revenue (state : State) : nat :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleState) with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-          maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-          totalCredit, allConsumers) =>  totalRevenue
-        end
-    end.
+    state.(oracleState).(totalRevenue).
 
 Definition get_consumers (state : State) : AllConsumers :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleState) with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-            maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-            totalCredit, allConsumers) =>  allConsumers
-            end
-    end.
+    state.(oracleState).(allConsumers).
 
 
 Definition get_latest_write (state : State) : LatestWrite :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleState) with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-            maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-            totalCredit, allConsumers) => latestWrite
-        end
-    end.
+    state.(oracleState).(latestWrite).
 
 
-Definition get_base_fee (state : State) : nat :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleState) with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-            maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-            totalCredit, allConsumers) => baseFee
-        end
-    end.
+Definition get_base_fee (state : State) : BaseFee :=
+    state.(oracleState).(baseFee).
 
-Definition get_owner (state : State) : address :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleParameters) with
-        | (owner, _, _) => owner
-        end
-    end.
+Definition get_owner (state : State) : Owner :=
+    state.(oracleParameters).(owner).
 
 Definition get_description (state : State) : string :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleParameters) with
-        | (_, description, _) => description
-        end
-    end.
+    state.(oracleParameters).(description).
 
 Definition get_locking_period (state : State) : nat :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleParameters) with
-        | (_, _, lockingPeriod) => lockingPeriod
-        end
-    end.
+    state.(oracleParameters).(lockingPeriod).
 
     
-Definition get_trace (state : State) : list (Events) :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) => trace
-    end.
+Definition get_trace (state : State) : Trace :=
+    state.(trace).
 
 (* 
  * This function checks if a consumer with the address 'consumer' exists in the target list
@@ -149,7 +104,7 @@ Fixpoint get_consumer_info (allConsumers : list (address * ConsumerInfo)) (targe
 
 Definition get_latest_read_consumer (consumer : address) (state : State) : nat :=
     let consumerInfo := get_consumer_info (get_consumers (state)) (consumer) in
-        consumerInfo.(LatestRead).
+        consumerInfo.(latestRead).
 
 Definition register_consumer (consumer : address) (consumerList : AllConsumers) (credit : nat) (latestRead : nat)
                              (weight : nat) (weightNext : nat) (weightTimelock : nat) : AllConsumers :=
@@ -163,359 +118,321 @@ Definition register_consumer (consumer : address) (consumerList : AllConsumers) 
 
 Definition constructor (owner : address) (description : string) 
                         (lockingPeriod : nat) (baseFee : nat) : State :=
-    let oracleState := (0 % float, 0, 0, 0, 0, baseFee, 
-                        (baseFee * 3), 0, 0, 0, 
-                        0, 0, nil) in
-        let oracleParameters := (owner, description, lockingPeriod) in
-            ((oracleState, oracleParameters), nil).
+    let oracleState := Build_OracleState (0 % float) (0) (0) (0) (0) (0) (baseFee) 
+                        (baseFee * 3) (0) (0) (0) (0) (0) (nil) in
+        let oracleParameters := Build_OracleParameters (owner) (description) (lockingPeriod) in
+            Build_State (oracleState) (oracleParameters) (nil).
 
 
-Definition write_data (state : State) (newData : float) (newCost : nat) (timeStamp : nat) (caller : address) : State :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match oracleParameters with
-        | (owner, _, _) =>
-            if (compare_address (owner) (caller))
-            then
-                match oracleState with
-                | (data, totalCost, b, writes, c, d, e, f, g, latestCost, latestWrite, j, k) =>
-                    let newOracleState := (newData, (totalCost + newCost), b, (writes + 1), c, d, e, f, g, 
-                                            newCost, timeStamp, j, k) in
-                        let newEvent := DataWritten (newData) (newCost) (timeStamp) (caller) in
-                            ((newOracleState, oracleParameters), trace ++ (newEvent :: nil))
-                end
-            else
-                state
-        end
-    end.
+Definition write_data (state : State) (newData : float) (newCost : nat) (caller : address) : State :=
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in
+    let oldTrace := state.(trace) in
+
+    if (compare_address (oldOracleParams.(owner)) (caller))
+    then
+        let newOracleState := Build_OracleState (newData) (oldOracleState.(timeStamp) + 1) (oldOracleState.(totalCost) + newCost) (oldOracleState.(totalRevenue))
+                                (oldOracleState.(writes) + 1) (oldOracleState.(reads)) (oldOracleState.(baseFee)) (oldOracleState.(maxFee))
+                                (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeTimeLock)) (newCost) (oldOracleState.(timeStamp) + 1) (oldOracleState.(totalCredit))
+                                (oldOracleState.(allConsumers)) in
+        let newEvent := DataWritten (newData) (newCost) (caller) in
+        
+        Build_State (newOracleState) (oldOracleParams) (oldTrace ++ (newEvent :: nil))
+    else
+        state.
 
 Definition weight_of (consumer : address) (allConsumers : AllConsumers) : nat :=
     let consumerInfo := get_consumer_info (allConsumers) (consumer) in
-        consumerInfo.(Weight).
+        consumerInfo.(weight).
     
 
 Definition fee_of (consumer : address) (weight : nat) (allConsumers : AllConsumers) (latestWrite : nat) (baseFee : nat) : nat :=
     let consumerInfo := get_consumer_info (allConsumers) (consumer) in
-        if (latestWrite <? consumerInfo.(LatestRead))
+        if (latestWrite <? consumerInfo.(latestRead))
         then
             0
         else
             (weight * baseFee).
 
 Definition fee_of_public (consumer : address) (state : State) : nat :=
-    match state with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleState) with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-          maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-          totalCredit, allConsumers) => 
-            fee_of (consumer) (weight_of (consumer) (allConsumers)) (allConsumers) (latestWrite) (baseFee)
-        end
-    end.
+        fee_of (consumer) (weight_of (consumer) (state.(oracleState).(allConsumers))) 
+        (state.(oracleState).(allConsumers)) 
+        (state.(oracleState).(latestWrite)) (state.(oracleState).(baseFee)).
 
 Definition get_credit_consumer (consumer : address) (allConsumers : AllConsumers) : nat :=
     let consumerInfo := get_consumer_info (allConsumers) (consumer) in
-        consumerInfo.(Credit).
+        consumerInfo.(credit).
     
 
 
-Definition read_data (state : State) (consumer : address) (timeStamp : nat) : (State * ValueOption float) :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleState) with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-          maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-          totalCredit, allConsumers) =>
-            let consumerInfo := get_consumer_info (allConsumers) (consumer) in 
-            let weight := consumerInfo.(Weight) in
-            let fee := fee_of (consumer) (weight) (allConsumers) (latestWrite) (baseFee) in
-            let credit := consumerInfo.(Credit) in
-                if (credit <? fee)
-                then 
-                    (state, None float)
-                else
-                    let newConsumerInfo := Build_ConsumerInfo (credit - fee) (timeStamp) 
-                        (consumerInfo.(Weight)) (consumerInfo.(WeightNext)) (consumerInfo.(WeightTimeLock)) in
-                    let newOracleState := (data, totalCost, (totalRevenue + fee), writes, (reads + weight),
-                        baseFee, maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite,
-                        (totalCredit - fee), modify_list (ConsumerInfo) (allConsumers) (consumer) (newConsumerInfo) (nil)) in
-                        (((newOracleState, oracleParameters), trace ++ ((DataRead (consumer) (timeStamp) (weight) (data)) :: nil)), Some float (data))
-        end
-    end.
+Definition read_data (state : State) (consumer : address) : (State * ValueOption float) :=
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in
+    let oldTrace := state.(trace) in
+    let consumerInfo := get_consumer_info (oldOracleState.(allConsumers)) (consumer) in 
+    let weight := consumerInfo.(weight) in
+    let fee := fee_of (consumer) (weight) (oldOracleState.(allConsumers)) 
+                (oldOracleState.(latestWrite)) (oldOracleState.(baseFee)) in
+    let credit := consumerInfo.(credit) in
+    let data := oldOracleState.(data) in
+
+        if (credit <? fee)
+        then 
+            (state, None float)
+        else
+            let newConsumerInfo := Build_ConsumerInfo (credit - fee) (oldOracleState.(timeStamp) + 1) (weight) (consumerInfo.(weightNext)) (consumerInfo.(weightTimeLock)) in
+            let newOracleState := Build_OracleState (data) (oldOracleState.(timeStamp) + 1) (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue) + fee) 
+                (oldOracleState.(writes)) (oldOracleState.(reads) + weight) (oldOracleState.(baseFee)) (oldOracleState.(maxFee))
+                (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeTimeLock)) (oldOracleState.(latestCost)) (oldOracleState.(latestWrite))
+                (oldOracleState.(totalCredit) - fee) (modify_list (ConsumerInfo) (oldOracleState.(allConsumers)) (consumer) (newConsumerInfo) (nil)) in
+            let newState := Build_State (newOracleState) (oldOracleParams) (oldTrace ++ ((DataRead (consumer) (weight) (data)) :: nil)) in
+
+                (newState, Some float (data)).  
 
 Definition inspectData (caller : address) (state : State) : ValueOption float :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleParameters) with
-        | (owner, _, _) =>
-            if (compare_address (owner) (caller))
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in
+
+    if (compare_address (oldOracleParams.(owner)) (caller))
+    then
+        Some (float) (oldOracleState.(data))
+    else 
+        None float.
+
+Definition schedule_weight_adjustment (consumer : address) (caller : address) (weightNext : nat) (blockTimeStamp : nat) (state : State) : State :=
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in 
+    let oldTrace := state.(trace) in
+
+    if (compare_address (oldOracleParams.(owner)) (caller))
+    then
+        let consumerInfo := get_consumer_info (oldOracleState.(allConsumers)) (consumer) in  
+        let scheduleTime := (blockTimeStamp + (oldOracleParams.(lockingPeriod))) in
+        let newConsumerInfo := Build_ConsumerInfo (consumerInfo.(credit)) (consumerInfo.(latestRead))
+            (consumerInfo.(weight)) (weightNext) (scheduleTime) in
+        let newConsumers := modify_list (ConsumerInfo) (oldOracleState.(allConsumers)) (consumer) (newConsumerInfo) (nil) in
+        let newOracleState := Build_OracleState (oldOracleState.(data)) (oldOracleState.(timeStamp)) (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue))
+                              (oldOracleState.(writes)) (oldOracleState.(reads)) (oldOracleState.(baseFee)) (oldOracleState.(maxFee)) 
+                              (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeTimeLock)) (oldOracleState.(latestCost)) (oldOracleState.(latestWrite)) 
+                              (oldOracleState.(totalCredit)) (newConsumers) in
+        let newState := Build_State (newOracleState) (oldOracleParams)
+                        (oldTrace ++ ((WeightAdjustmentScheduled (consumer) (caller) (weightNext) (blockTimeStamp) (scheduleTime)) :: nil)) in
+        
+        newState
+    else
+        state.
+
+
+Definition adjust_weight (consumer : address) (caller : address) (blockTimeStamp : nat) (state : State) : State :=
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in 
+    let oldTrace := state.(trace) in
+
+    if (compare_address (oldOracleParams.(owner)) (caller))
+    then
+        let consumerInfo := get_consumer_info (oldOracleState.(allConsumers)) (consumer) in
+            if (blockTimeStamp <? consumerInfo.(weightTimeLock))
             then
-                match (oracleState) with
-                | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                  maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                  totalCredit, allConsumers) => Some float (data)
-                end
-            else 
-                None float
-        end
-    end.
-
-Definition schedule_weight_adjustment (consumer : address) (caller : address) (weightNext : nat) (timeStamp : nat) (state : State) : State :=
-    match state with
-    | ((oracleState, oracleParameters), trace) =>
-        match oracleState with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-          maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-          totalCredit, allConsumers) =>
-            match (oracleParameters) with
-            | (owner, _, lockingPeriod) =>
-                if (compare_address (owner) (caller))
-                then
-                    let consumerInfo := get_consumer_info (allConsumers) (consumer) in  
-                    let scheduleTime := timeStamp + lockingPeriod in
-                    let newConsumerInfo := Build_ConsumerInfo (consumerInfo.(Credit)) (consumerInfo.(LatestRead))
-                        (consumerInfo.(Weight)) (weightNext) (scheduleTime) in
-                    let newConsumers := modify_list (ConsumerInfo) (allConsumers) (consumer) (newConsumerInfo) (nil) in
-                    let newOracleState := 
-                        (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                        maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                        totalCredit, newConsumers) in
-                            ((newOracleState, oracleParameters), 
-                            trace ++ ((WeightAdjustmentScheduled (consumer) (caller) (weightNext) (timeStamp) (scheduleTime)) :: nil))
-                else
-                    state
-            end
-        end
-    end.
-
-
-Definition adjust_weight (consumer : address) (caller : address) (timeStamp : nat) (state : State) : State :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleParameters) with
-        | (owner, _, _) =>
-            if (compare_address (owner) (caller))
-            then
-                match (oracleState) with
-                | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                  maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                  totalCredit, allConsumers) =>
-                    let consumerInfo := get_consumer_info (allConsumers) (consumer) in
-                        if (timeStamp <? consumerInfo.(WeightTimeLock))
-                        then
-                            state
-                        else
-                            let newConsumerInfo := Build_ConsumerInfo (consumerInfo.(Credit)) (consumerInfo.(LatestRead))
-                                (consumerInfo.(WeightNext)) (consumerInfo.(WeightNext)) (consumerInfo.(WeightTimeLock)) in
-                            let newConsumers := modify_list (ConsumerInfo) (allConsumers) (consumer) (newConsumerInfo) (nil) in
-                            let newOracleState := 
-                                (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                                maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                                totalCredit, newConsumers) in
-                                ((newOracleState, oracleParameters), trace ++ ((WeightAdjusted (consumer) (caller) (timeStamp) (newConsumerInfo.(Weight))) :: nil))
-                end
-            else
                 state
-        end
-    end.
-
-
-Definition schedule_max_fee_adjustment (maxFeeNextNew : nat) (caller : address) (timeStamp : nat) (state : State) : State :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleParameters) with
-        | (owner, _, lockingPeriod) =>
-            if (compare_address (owner) (caller))
-            then
-                match (oracleState) with
-                | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                  maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                  totalCredit, allConsumers) =>
-                    let newOracleState :=
-                        (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                        maxFee, maxFeeNextNew, timeStamp + lockingPeriod, latestCost, latestWrite, 
-                        totalCredit, allConsumers)
-                    in
-                        ((newOracleState, oracleParameters), trace ++ ((MaxFeeAdjustmentScheduled (maxFeeNextNew) (caller) (timeStamp) (timeStamp + lockingPeriod)) :: nil))
-                end
             else
-                state
-        end
-    end.
+                let newConsumerInfo := Build_ConsumerInfo (consumerInfo.(credit)) (consumerInfo.(latestRead))
+                    (consumerInfo.(weightNext)) (consumerInfo.(weightNext)) (consumerInfo.(weightTimeLock)) in
+                let newConsumers := modify_list (ConsumerInfo) (oldOracleState.(allConsumers)) (consumer) (newConsumerInfo) (nil) in
+                
+                let newOracleState := Build_OracleState (oldOracleState.(data)) (oldOracleState.(timeStamp)) (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue))
+                                        (oldOracleState.(writes)) (oldOracleState.(reads)) (oldOracleState.(baseFee)) (oldOracleState.(maxFee)) 
+                                        (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeTimeLock)) (oldOracleState.(latestCost)) (oldOracleState.(latestWrite)) 
+                                        (oldOracleState.(totalCredit)) (newConsumers) in
+                let newState := Build_State (newOracleState) (oldOracleParams)
+                (oldTrace ++ ((WeightAdjusted (consumer) (caller) (blockTimeStamp) (newConsumerInfo.(weight))) :: nil)) in
 
-Definition adjust_max_fee (caller : address) (timeStamp : nat) (state : State) : State :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleParameters) with
-        | (owner, _, _) =>
-            if (compare_address (owner) (caller))
-            then
-                match (oracleState) with
-                | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                  maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                  totalCredit, allConsumers) =>
-                    if (timeStamp <? maxFeeTimelock)
-                    then
-                        state
-                    else
-                        let newOracleState :=
-                            (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                            maxFeeNext, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                            totalCredit, allConsumers)
-                        in
-                            ((newOracleState, oracleParameters), trace ++ ((MaxFeeAdjusted (caller) (timeStamp) (maxFeeNext)) :: nil))
-                end
-            else
-                state
-        end
-    end.
+                newState
+    else
+        state.
+
+
+Definition schedule_max_fee_adjustment (maxFeeNextNew : nat) (caller : address) (blockTimeStamp : nat) (state : State) : State :=
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in 
+    let oldTrace := state.(trace) in
+
+    if (compare_address (oldOracleParams.(owner)) (caller))
+    then
+        let newOracleState := Build_OracleState
+            (oldOracleState.(data)) (oldOracleState.(timeStamp)) (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue)) (oldOracleState.(writes)) 
+            (oldOracleState.(reads)) (oldOracleState.(baseFee)) (oldOracleState.(maxFee)) (maxFeeNextNew) 
+            (blockTimeStamp + (oldOracleParams.(lockingPeriod))) (oldOracleState.(latestCost)) (oldOracleState.(latestWrite)) 
+            (oldOracleState.(totalCredit)) (oldOracleState.(allConsumers)) in
+        
+        let newState := Build_State (newOracleState) (oldOracleParams)
+                        (oldTrace ++ ((MaxFeeAdjustmentScheduled (maxFeeNextNew) (caller) (blockTimeStamp) (blockTimeStamp + oldOracleParams.(lockingPeriod))) :: nil)) in
+        
+        newState
+    else
+        state.
+
+Definition adjust_max_fee (caller : address) (blockTimeStamp : nat) (state : State) : State :=
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in 
+    let oldTrace := state.(trace) in
+
+    if (compare_address (oldOracleParams.(owner)) (caller))
+    then
+        if (blockTimeStamp <? oldOracleState.(maxFeeTimeLock))
+        then
+            state
+        else
+            let newOracleState := Build_OracleState
+            (oldOracleState.(data)) (oldOracleState.(timeStamp)) (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue)) (oldOracleState.(writes)) 
+            (oldOracleState.(reads)) (oldOracleState.(baseFee)) (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeNext)) 
+            (oldOracleState.(maxFeeTimeLock)) (oldOracleState.(latestCost)) (oldOracleState.(latestWrite)) 
+            (oldOracleState.(totalCredit)) (oldOracleState.(allConsumers)) in
+            
+            let newState := Build_State (newOracleState) (oldOracleParams) 
+            (oldTrace ++ ((MaxFeeAdjusted (caller) (blockTimeStamp) (oldOracleState.(maxFeeNext))) :: nil)) in
+
+            newState
+    else
+        state.
 
 
 
 Definition adjust_base_fee (caller : address) (state : State) : State :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleParameters) with
-        | (owner, _, _) =>
-            if (compare_address (owner) (caller))
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in 
+    let oldTrace := state.(trace) in
+
+    if (compare_address (oldOracleParams.(owner)) (caller))        
+    then
+        let readsDiv :=
+            if (oldOracleState.(reads) =? 0)
             then
-                match (oracleState) with
-                | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                  maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                  totalCredit, allConsumers) =>
-                    let readsDiv :=
-                        if (reads =? 0)
-                        then
-                            1
-                        else
-                            reads
-                    in
-                        let addCent :=
-                            if (((((latestCost * writes) + totalCost) - totalRevenue) mod readsDiv) =? 0)
-                            then
-                                0
-                            else
-                                1 
-                        in
-                        let newBaseFee := min (((((latestCost * writes) + totalCost) - totalRevenue) / readsDiv) + addCent) (maxFee) in
-                        let newOracleState :=
-                            (data, totalCost, totalRevenue, 0, 0, newBaseFee, 
-                            maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                            totalCredit, allConsumers) in
-                            ((newOracleState, oracleParameters), trace ++ ((BaseFeeAdjusted (caller) (writes) (reads) (newBaseFee)) :: nil))
-                end
+                1
             else
-                state
-        end
-    end.
+                oldOracleState.(reads) in
+        let addCent :=
+            if (((((oldOracleState.(latestCost) * oldOracleState.(writes)) + oldOracleState.(totalCost)) - oldOracleState.(totalRevenue)) mod readsDiv) =? 0)
+            then
+                0
+            else
+                1 in
+        let newBaseFee := 
+            if (((oldOracleState.(latestCost) * oldOracleState.(writes)) + oldOracleState.(totalCost)) <=? oldOracleState.(totalRevenue))
+            then
+                0
+            else
+                min (((((oldOracleState.(latestCost) * oldOracleState.(writes)) + oldOracleState.(totalCost)) - oldOracleState.(totalRevenue)) / readsDiv) + addCent) 
+                    (oldOracleState.(maxFee)) in
+        let newOracleState := Build_OracleState
+        (oldOracleState.(data)) (oldOracleState.(timeStamp)) (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue)) (0) (0) (newBaseFee) 
+        (oldOracleState.(maxFee)) (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeTimeLock)) (oldOracleState.(latestCost)) 
+        (oldOracleState.(latestWrite)) (oldOracleState.(totalCredit)) (oldOracleState.(allConsumers)) in
+
+        let newState := Build_State (newOracleState) (oldOracleParams)
+        (oldTrace ++ ((BaseFeeAdjusted (caller) (oldOracleState.(writes)) (oldOracleState.(reads)) (newBaseFee)) :: nil)) in
+
+        newState
+    else
+        state.
 
 Definition deposit_credit (consumer : address) (state : State) (deposit : nat) : State :=
-    match state with
-    | ((oracleState, oracleParameters), trace) =>
-        match oracleState with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-          maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-          totalCredit, allConsumers) =>
-            let consumerInfo := get_consumer_info (allConsumers) (consumer) in
-            let newAllConsumers :=
-                if (consumerInfo.(Weight) =? 0)
-                then
-                    register_consumer (consumer) (allConsumers) (deposit) (0) (1) (0) (0)
-                else
-                    let newConsumerInfo := Build_ConsumerInfo ((consumerInfo.(Credit) + deposit))
-                        (consumerInfo.(LatestRead)) (consumerInfo.(Weight)) (consumerInfo.(WeightNext))
-                        (consumerInfo.(WeightTimeLock)) in
-                    modify_list (ConsumerInfo) (allConsumers) (consumer) (newConsumerInfo) (nil)
-            in
-                let newOracleState := 
-                    (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                    maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                    (totalCredit + deposit), newAllConsumers) in
-                    ((newOracleState, oracleParameters), trace ++ ((CreditDeposited (consumer) (deposit)) :: nil))
-        end
-    end.
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in 
+    let oldTrace := state.(trace) in
+    let consumerInfo := get_consumer_info (oldOracleState.(allConsumers)) (consumer) in
+    let newAllConsumers :=
+        if (consumerInfo.(weight) =? 0)
+        then
+            register_consumer (consumer) (oldOracleState.(allConsumers)) (deposit) (0) (1) (0) (0)
+        else
+            let newConsumerInfo := Build_ConsumerInfo ((consumerInfo.(credit) + deposit))
+                (consumerInfo.(latestRead)) (consumerInfo.(weight)) (consumerInfo.(weightNext))
+                (consumerInfo.(weightTimeLock)) in
+            modify_list (ConsumerInfo) (oldOracleState.(allConsumers)) (consumer) (newConsumerInfo) (nil) in
+    
+    let newOracleState := Build_OracleState
+    (oldOracleState.(data)) (oldOracleState.(timeStamp)) (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue)) (oldOracleState.(writes)) (oldOracleState.(reads)) 
+    (oldOracleState.(baseFee)) (oldOracleState.(maxFee)) (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeTimeLock)) (oldOracleState.(latestCost)) 
+    (oldOracleState.(latestWrite)) (oldOracleState.(totalCredit) + deposit) (newAllConsumers) in
+    
+    let newState := Build_State (newOracleState) (oldOracleParams)
+    (oldTrace ++ ((CreditDeposited (consumer) (deposit)) :: nil)) in
+
+    newState.
 
 
 Definition withdraw_credit (amount : nat) (caller : address) (state : State) : State :=
-    match state with
-    | ((oracleState, oracleParameters), trace) =>
-        match oracleState with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-          maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-          totalCredit, allConsumers) =>
-            let consumerInfo := get_consumer_info (allConsumers) (caller) in
-            if (consumerInfo.(Credit) <? amount)
-            then
-                state
-            else
-            let newConsumerInfo := Build_ConsumerInfo ((consumerInfo.(Credit) - amount)) (consumerInfo.(LatestRead))
-                                    (consumerInfo.(Weight)) (consumerInfo.(WeightNext)) (consumerInfo.(WeightTimeLock)) in
-            let newConsumers := modify_list (ConsumerInfo) (allConsumers) (caller) (newConsumerInfo) (nil) in
-            let newOracleState := 
-                (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                (totalCredit - amount), newConsumers) in
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in 
+    let oldTrace := state.(trace) in
+    let consumerInfo := get_consumer_info (oldOracleState.(allConsumers)) (caller) in
 
-                ((newOracleState, oracleParameters), trace ++ ((CreditWithdrawn (amount) (caller)) :: nil))
-        end
-    end.
+    if (consumerInfo.(credit) <? amount)
+    then
+        state
+    else
+    let newConsumerInfo := Build_ConsumerInfo ((consumerInfo.(credit) - amount)) (consumerInfo.(latestRead))
+                            (consumerInfo.(weight)) (consumerInfo.(weightNext)) (consumerInfo.(weightTimeLock)) in
+    let newConsumers := modify_list (ConsumerInfo) (oldOracleState.(allConsumers)) (caller) (newConsumerInfo) (nil) in
+    let newOracleState := Build_OracleState
+    (oldOracleState.(data)) (oldOracleState.(timeStamp)) (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue)) (oldOracleState.(writes)) (oldOracleState.(reads)) 
+    (oldOracleState.(baseFee)) (oldOracleState.(maxFee)) (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeTimeLock)) (oldOracleState.(latestCost)) 
+    (oldOracleState.(latestWrite)) (oldOracleState.(totalCredit) - amount) (newConsumers) in
+    
+    let newState := Build_State (newOracleState) (oldOracleParams)
+    (oldTrace ++ ((CreditWithdrawn (amount) (caller)) :: nil)) in
+
+    newState.
 
 Definition withdraw (receiver : address) (amount : nat) (caller : address) (state : State) : State :=
-    match (state) with
-    | ((oracleState, oracleParameters), trace) =>
-        match (oracleParameters) with
-        | (owner, _, _) =>
-            if (compare_address (owner) (caller))
-            then
-                match (oracleState) with
-                | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-                  maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                  totalCredit, allConsumers) =>
-                    if ((totalRevenue - totalCredit) <? amount)
-                    then
-                        state
-                    else
-                        let newOracleState :=
-                            (data, totalCost, (totalRevenue - amount), writes, reads, baseFee, 
-                            maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                            totalCredit, allConsumers)
-                        in
-                            ((newOracleState, oracleParameters), trace ++ ((RevenueWithdrawn (receiver) (amount) (caller)) :: nil))
-                end
-            else
-                state
-        end
-    end.
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in 
+    let oldTrace := state.(trace) in
+
+    if (compare_address (oldOracleParams.(owner)) (caller))
+    then
+        if ((oldOracleState.(totalRevenue) - oldOracleState.(totalCredit)) <? amount)
+        then
+            state
+        else
+            let newOracleState := Build_OracleState
+            (oldOracleState.(data)) (oldOracleState.(timeStamp)) (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue) - amount) (oldOracleState.(writes)) (oldOracleState.(reads)) 
+            (oldOracleState.(baseFee)) (oldOracleState.(maxFee)) (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeTimeLock)) (oldOracleState.(latestCost)) 
+            (oldOracleState.(latestWrite)) (oldOracleState.(totalCredit)) (oldOracleState.(allConsumers)) in
+            
+            let newState := Build_State (newOracleState) (oldOracleParams)
+            (oldTrace ++ ((RevenueWithdrawn (receiver) (amount) (caller)) :: nil)) in
+
+            newState
+    else
+        state.
 
 Definition reset_cost_and_revenue (state : State) : State :=
-    match state with
-    | ((oracleState, oracleParameters), trace) =>
-        match oracleState with
-        | (data, totalCost, totalRevenue, writes, reads, baseFee, 
-          maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-          totalCredit, allConsumers) =>
-            let (newTotalCost, newTotalRevenue) := 
-                if ((totalRevenue <? totalCost))
-                then
-                    ((totalCost - totalRevenue), 0)
-                else
-                    (0, (totalRevenue - totalCost))
-            in
-                let newOracleState := 
-                    (data, newTotalCost, newTotalRevenue, writes, reads, baseFee, 
-                    maxFee, maxFeeNext, maxFeeTimelock, latestCost, latestWrite, 
-                    totalCredit, allConsumers)
-                in
-                    ((newOracleState, oracleParameters), trace ++ ((Reset (totalCost) (totalRevenue)) :: nil))
-        end
-    end.
+    let oldOracleState := state.(oracleState) in
+    let oldOracleParams := state.(oracleParameters) in 
+    let oldTrace := state.(trace) in
+    let (newTotalCost, newTotalRevenue) := 
+        if (oldOracleState.(totalRevenue) <? oldOracleState.(totalCost))
+        then
+            ((oldOracleState.(totalCost) - oldOracleState.(totalRevenue)), 0)
+        else
+            (0, (oldOracleState.(totalRevenue) - oldOracleState.(totalCost))) in
+    let newOracleState := Build_OracleState
+    (oldOracleState.(data)) (newTotalCost) (oldOracleState.(timeStamp)) (newTotalRevenue) (oldOracleState.(writes)) (oldOracleState.(reads)) 
+    (oldOracleState.(baseFee)) (oldOracleState.(maxFee)) (oldOracleState.(maxFeeNext)) (oldOracleState.(maxFeeTimeLock)) (oldOracleState.(latestCost)) 
+    (oldOracleState.(latestWrite)) (oldOracleState.(totalCredit)) (oldOracleState.(allConsumers)) in
+            
+    let newState := Build_State (newOracleState) (oldOracleParams)
+    (oldTrace ++ ((Reset (oldOracleState.(totalCost)) (oldOracleState.(totalRevenue))) :: nil)) in
+
+    newState.
 
 
 Definition execute (state : State) (event : Events) : State :=
     match event with
-    | DataWritten (newData) (newCost) (timeStamp) (caller) => write_data (state) (newData) (newCost) (timeStamp) (caller)
-    | DataRead (consumer) (timeStamp) (_) (_) => 
-        let (newState, _) := read_data (state) (consumer) (timeStamp) 
+    | DataWritten (newData) (newCost) (caller) => write_data (state) (newData) (newCost) (caller)
+    | DataRead (consumer) (_) (_) => 
+        let (newState, _) := read_data (state) (consumer)
         in
             newState
     | WeightAdjustmentScheduled (consumer) (caller) (weightNext) (timeStamp) (_) => 
