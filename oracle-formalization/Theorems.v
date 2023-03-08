@@ -10,16 +10,9 @@ From OracleFormalization Require Export Functions.
 
 
 (*
- * THEOREMS AND SPECIFICATIONS
- *)
-
-
-(*
  * Theorem 1: All actions on the oracle maintain the non-negativity of credit of all
  *            all consumers
  *)
-
-
 
 (*
  * This function describes what it means for the credit for all the consumers to be 

@@ -1,6 +1,6 @@
 (*
-* Importing the Libraries
-*)
+ * Importing the Libraries
+ *)
 Require Import Init.Decimal.
 Require Import Reals.
 Require Import Floats.
@@ -9,18 +9,15 @@ Require Import Coq.Strings.String.
 From OracleFormalization Require Export Hexadecimal.
 
 (*
-* IMPORTANT
-* weight is interpreted as float
-* reads and writes : float
-* What to do if the address doesn't exist in the mapping?
-*)
-
-
+ * IMPORTANT
+ * weight is interpreted as float
+ * reads and writes : float
+ * What to do if the address doesn't exist in the mapping?
+ *)
 
 Inductive ValueOption (type : Type) : Type :=
     | Some (val : type)
     | None.
-
 
 Inductive Event : Type :=
     | DataWritten (newData : float) (newCost : nat) (caller : address)
@@ -35,74 +32,67 @@ Inductive Event : Type :=
     | RevenueWithdrawn (receiver : address) (amount : nat) (caller : address)
     | Reset (cost : nat) (revenue : nat).
 
-Definition Trace : Type :=
-    list (Event).
+Definition Trace : Type := list (Event).
 
-Definition Credit := nat.
-Definition LatestRead := nat.
-Definition Weight := nat.
-Definition WeightNext := nat.
+Definition Credit         := nat.
+Definition LatestRead     := nat.
+Definition Weight         := nat.
+Definition WeightNext     := nat.
 Definition WeightTimeLock := nat.
 
 Record ConsumerInfo :=
 {
-    credit : nat;
-    latestRead : nat;
-    weight : nat;
-    weightNext : nat;
+    credit         : nat;
+    latestRead     : nat;
+    weight         : nat;
+    weightNext     : nat;
     weightTimeLock : nat
-    
 }.
 
-Definition Owner := address.
-Definition Data := float.
-Definition TimeStamp := nat.
-Definition TotalCost := nat.
-Definition TotalRevenue := nat.
-Definition Writes := nat.
-Definition Reads := nat.
-Definition BaseFee := nat.
-Definition MaxFee := nat.
-Definition MaxFeeNext := nat.
+Definition Owner          := address.
+Definition Data           := float.
+Definition TimeStamp      := nat.
+Definition TotalCost      := nat.
+Definition TotalRevenue   := nat.
+Definition Writes         := nat.
+Definition Reads          := nat.
+Definition BaseFee        := nat.
+Definition MaxFee         := nat.
+Definition MaxFeeNext     := nat.
 Definition MaxFeeTimeLock := nat.
-Definition LatestCost := nat.
-Definition LatestWrite := nat.
-Definition TotalCredit := nat.
-Definition AllConsumers := list (address * ConsumerInfo).
-
-(*
-* Definitions
-*)
-
+Definition LatestCost     := nat.
+Definition LatestWrite    := nat.
+Definition TotalCredit    := nat.
+Definition AllConsumers   := list (address * ConsumerInfo).
 
 Record OracleState :=
 {
-    data : Data;
-    timeStamp : TimeStamp;
-    totalCost : TotalCost;
-    totalRevenue : TotalRevenue;
-    writes : Writes;
-    reads : Reads;
-    baseFee : BaseFee;
-    maxFee : MaxFee;
-    maxFeeNext : MaxFeeNext;
+    data           : Data;
+    timeStamp      : TimeStamp;
+    totalCost      : TotalCost;
+    totalRevenue   : TotalRevenue;
+    writes         : Writes;
+    reads          : Reads;
+    baseFee        : BaseFee;
+    maxFee         : MaxFee;
+    maxFeeNext     : MaxFeeNext;
     maxFeeTimeLock : MaxFeeTimeLock;
-    latestCost : LatestCost;
-    latestWrite : LatestWrite;
-    totalCredit : TotalCredit;
-    allConsumers : AllConsumers
+    latestCost     : LatestCost;
+    latestWrite    : LatestWrite;
+    totalCredit    : TotalCredit;
+    allConsumers   : AllConsumers
 }.
 
 Record OracleParameters :=
 {
-    owner : Owner;
-    description : string;
+    owner         : Owner;
+    description   : string;
     lockingPeriod : nat
 }.
 
 Record State :=
 {
-    oracleState : OracleState;
+    oracleState      : OracleState;
     oracleParameters : OracleParameters;
-    trace : Trace
+    trace            : Trace
 }.
