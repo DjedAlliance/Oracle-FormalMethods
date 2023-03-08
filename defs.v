@@ -22,7 +22,7 @@ Inductive ValueOption (type : Type) : Type :=
     | None.
 
 
-Inductive Events : Type :=
+Inductive Event : Type :=
     | DataWritten (newData : float) (newCost : nat) (caller : address)
     | DataRead (consumer : address) (weight : nat) (data : float)
     | WeightAdjustmentScheduled (consumer : address) (caller : address) (weightNext : nat) (timeStamp : nat) (weightTimelock : nat) 
@@ -36,7 +36,7 @@ Inductive Events : Type :=
     | Reset (cost : nat) (revenue : nat).
 
 Definition Trace : Type :=
-    list (Events).
+    list (Event).
 
 Definition Credit := nat.
 Definition LatestRead := nat.

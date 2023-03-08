@@ -100,7 +100,7 @@ Qed.
  *
  * The proof cases on the event
  *)
-Theorem credit_non_negative : forall (event : Events) (state : State),
+Theorem credit_non_negative : forall (event : Event) (state : State),
     (credit_non_negative_all_consumers (get_consumers (state))) -> 
     (credit_non_negative_all_consumers (get_consumers (execute (state) (event)))).
 Proof.
@@ -189,7 +189,7 @@ Qed.
  * currList : The tail recursive list which accumulates the events 
  *)
 
-Fixpoint split_trace_helper (trace : Trace) (currState : State) (currList : list (State * Events)) : list (State * Events) :=
+Fixpoint split_trace_helper (trace : Trace) (currState : State) (currList : list (State * Event)) : list (State * Event) :=
     match trace with
     | nil => currList
     | e :: trace' =>
@@ -210,7 +210,7 @@ Fixpoint split_trace_helper (trace : Trace) (currState : State) (currList : list
  * currState : This is the state of the Oracle before the event at the head of the trace
  * subLists : This list accumulates the slices as the function is tail recursive. This list is returned when we reach the end of the trace
  *)
-Fixpoint split_trace (trace : Trace) (currState : State) (subLists : list (list (State * Events))) : list (list (State * Events)) :=
+Fixpoint split_trace (trace : Trace) (currState : State) (subLists : list (list (State * Event))) : list (list (State * Event)) :=
     match trace with
     | nil => subLists
     | e :: trace' =>
@@ -223,7 +223,7 @@ Fixpoint split_trace (trace : Trace) (currState : State) (subLists : list (list 
     end.
 
 
-Fixpoint split_trace_correct_prop (mergeSlice : list (State * Events)) (trace : list (Events)) : Prop :=
+Fixpoint split_trace_correct_prop (mergeSlice : list (State * Event)) (trace : list (Event)) : Prop :=
     match trace with
     | nil => 
         match mergeSlice with
@@ -241,7 +241,7 @@ Fixpoint split_trace_correct_prop (mergeSlice : list (State * Events)) (trace : 
         end
     end.
 
-Fixpoint my_remove_event (trace : list (Events)) : list (Events) :=
+Fixpoint my_remove_event (trace : list (Event)) : list (Event) :=
     match trace with
     | nil => nil
     | e :: trace' =>
@@ -251,14 +251,14 @@ Fixpoint my_remove_event (trace : list (Events)) : list (Events) :=
         end
     end.
 
-Fixpoint my_remove_state (splitList : list (State * Events)) : list (Events) :=
+Fixpoint my_remove_state (splitList : list (State * Event)) : list (Event) :=
     match splitList with
     | nil => nil
     | (state, event) :: splitList' => event :: (my_remove_state (splitList'))
     end.
 
 Theorem my_remove_event_removes_datawritten :
-    forall (trace1 : list (Events)) (trace2 : list (Events)),
+    forall (trace1 : list (Event)) (trace2 : list (Event)),
     my_remove_event (trace1 ++ trace2) = my_remove_event (trace1) ++ my_remove_event (trace2).
 
 Proof.
@@ -287,7 +287,7 @@ Qed.
  * the consumer has already paid before and should not pay. If not, then the consumer is reading the
  * data for the first time and should pay
  *)
-Fixpoint all_consumers_pay_once_slice (slice : list (State * Events)) : Prop :=
+Fixpoint all_consumers_pay_once_slice (slice : list (State * Event)) : Prop :=
     match (slice) with
     | nil => True
     | (state, event) :: slice' => 
@@ -325,7 +325,7 @@ Fixpoint all_consumers_pay_once_slice (slice : list (State * Events)) : Prop :=
  * (least recent) at the head of the list. It makes more sense later in the inductive proof
  * to reason about the reversed list 
  *)    
-Fixpoint all_consumers_pay_once (splitList : list (list (State * Events))) : Prop :=
+Fixpoint all_consumers_pay_once (splitList : list (list (State * Event))) : Prop :=
     match (splitList) with
     | nil => True
     | slice :: splitList' => (all_consumers_pay_once_slice (rev (slice))) 
@@ -338,7 +338,7 @@ Fixpoint all_consumers_pay_once (splitList : list (list (State * Events))) : Pro
  * in an arbitrary slice. Since we are slicing at DataWritten events exclusive, there
  * should be no DataWritten events in a slice
  *)
-Fixpoint no_data_written_in_slice (slice : list (State * Events)) : Prop :=
+Fixpoint no_data_written_in_slice (slice : list (State * Event)) : Prop :=
     match slice with
     | nil => True
     | (_, event) :: eventHistory' => 
@@ -354,7 +354,7 @@ Fixpoint no_data_written_in_slice (slice : list (State * Events)) : Prop :=
  * in the list of slices. From here, the list returned by 'split_trace' will be referred
  * as the list of slices.
  *)
-Fixpoint no_data_written_subLists (subList : list (list (State * Events))) : Prop :=
+Fixpoint no_data_written_subLists (subList : list (list (State * Event))) : Prop :=
     match subList with
     | nil => True
     | slice :: subList' => (no_data_written_in_slice (slice)) /\ 
@@ -370,7 +370,7 @@ Fixpoint no_data_written_subLists (subList : list (list (State * Events))) : Pro
  * the event in the tuple (state, event). The case for 'DataRead' is the hard one and requires elaborate proof.
  * The rest of the cases are easy and have exactly the same proof.
  *)
-Theorem consumer_pays_once_slice : forall (slice : list (State * Events)),
+Theorem consumer_pays_once_slice : forall (slice : list (State * Event)),
     no_data_written_in_slice (slice) -> all_consumers_pay_once_slice (slice).
 Proof.
     intros. induction slice as [ | (s, e) l' IHl'].
@@ -463,7 +463,7 @@ Qed.
  * together than the given property also holds for the two lists individually
  *)
 Theorem no_data_written_rev_split :
-    forall (l1 : list (State * Events)) (l2 : list (State * Events)),
+    forall (l1 : list (State * Event)) (l2 : list (State * Event)),
     no_data_written_in_slice (l1 ++ l2) -> no_data_written_in_slice (l1) /\ no_data_written_in_slice (l2).
 Proof.
     intros. induction l1 as [ | (s, e) l' IHl'].
@@ -499,7 +499,7 @@ Qed.
  * together than the given property also holds for the two lists appended
  *)
 Theorem no_data_written_in_slice_proof_helper1 :
-    forall (l1 : list (State * Events)) (l2 : list (State * Events)),
+    forall (l1 : list (State * Event)) (l2 : list (State * Event)),
     (no_data_written_in_slice (l1) /\ no_data_written_in_slice (l2)) -> no_data_written_in_slice (l1 ++ l2).
 
 Proof.
@@ -525,7 +525,7 @@ Qed.
  * DataWritten events in the slice as well
  *)
 Theorem no_data_written_rev :
-    forall (slice : list (State * Events)),
+    forall (slice : list (State * Event)),
     no_data_written_in_slice (rev (slice)) -> no_data_written_in_slice (slice).
 Proof.
     intros. induction slice as [ | (s, e) l' IHl'].
@@ -550,7 +550,7 @@ Qed.
  * all consumers pay exactly once for all the slices
  *)
 Theorem consumers_pay_once :  
-    forall (splitList : list (list (State * Events))),
+    forall (splitList : list (list (State * Event))),
     no_data_written_subLists (splitList) -> all_consumers_pay_once (splitList).
 
 Proof.
@@ -567,7 +567,7 @@ Qed.
  * then the property also holds for the two lists appended together.
  *)
 Theorem no_data_written_when_list_split_helper1 :
-    forall (l1 : list (list (State * Events))) (l2 : list (list (State * Events))),
+    forall (l1 : list (list (State * Event))) (l2 : list (list (State * Event))),
     (no_data_written_subLists (l1) /\ no_data_written_subLists (l2)) -> no_data_written_subLists (l1 ++ l2).
 
 Proof.
@@ -598,7 +598,7 @@ Qed.
  * we will have no data written events in the slice returned by split_trace_helper called on the trace, startState and the sliceSoFar
  *)
 Theorem no_data_written_in_slice_proof :
-    forall (trace : list (Events)) (startState : State) (sliceSoFar : list (State * Events)),
+    forall (trace : list (Event)) (startState : State) (sliceSoFar : list (State * Event)),
     no_data_written_in_slice (sliceSoFar) -> no_data_written_in_slice (split_trace_helper (trace) (startState) (sliceSoFar)).
 
 Proof.
@@ -624,7 +624,7 @@ Qed.
  * data written events in the list of slices returned by split_trace called on trace, startState and splitsSoFar
  *)
 Theorem no_data_written_when_list_split :
-    forall (trace : list (Events)) (startState : State) (splitsSoFar : list (list (State * Events))),
+    forall (trace : list (Event)) (startState : State) (splitsSoFar : list (list (State * Event))),
     no_data_written_subLists (splitsSoFar) -> no_data_written_subLists (split_trace (trace) (startState) (splitsSoFar)).
 
 Proof.

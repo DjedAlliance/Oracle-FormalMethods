@@ -428,7 +428,7 @@ Definition reset_cost_and_revenue (state : State) : State :=
     newState.
 
 
-Definition execute (state : State) (event : Events) : State :=
+Definition execute (state : State) (event : Event) : State :=
     match event with
     | DataWritten (newData) (newCost) (caller) => write_data (state) (newData) (newCost) (caller)
     | DataRead (consumer) (_) (_) => 
