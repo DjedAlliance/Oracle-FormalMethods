@@ -32,10 +32,8 @@ Definition get_total_revenue (state : State) : nat :=
 Definition get_consumers (state : State) : AllConsumers :=
     state.(oracleState).(allConsumers).
 
-
 Definition get_latest_write (state : State) : LatestWrite :=
     state.(oracleState).(latestWrite).
-
 
 Definition get_base_fee (state : State) : BaseFee :=
     state.(oracleState).(baseFee).
