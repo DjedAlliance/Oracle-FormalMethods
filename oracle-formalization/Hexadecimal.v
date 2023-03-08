@@ -21,96 +21,96 @@ Inductive address :=
  | Df (_:address).
 
 Fixpoint compare_address (h1 : address) (h2 : address) : bool :=
-    match (h1) with
+    match h1 with
     | Nil => 
-        match (h2) with
+        match h2 with
         | Nil => true
         | _ => false
         end
-    | D0 (h1') => 
-        match (h2) with
-        | D0 (h2') => compare_address (h1') (h2')
+    | D0 h1' => 
+        match h2 with
+        | D0 h2' => compare_address h1' h2'
         | _ => false
         end 
-    | D1 (h1') => 
-        match (h2) with
-        | D1 (h2') => compare_address (h1') (h2')
+    | D1 h1' => 
+        match h2 with
+        | D1 h2' => compare_address h1' h2'
         | _ => false
         end
-    | D2 (h1') => 
-        match (h2) with
-        | D2 (h2') => compare_address (h1') (h2')
+    | D2 h1' => 
+        match h2 with
+        | D2 h2' => compare_address h1' h2'
         | _ => false
         end
-    | D3 (h1') => 
-        match (h2) with
-        | D3 (h2') => compare_address (h1') (h2')
+    | D3 h1' => 
+        match h2 with
+        | D3 h2' => compare_address h1' h2'
         | _ => false
         end
-    | D4 (h1') => 
-        match (h2) with
-        | D4 (h2') => compare_address (h1') (h2')
+    | D4 h1' => 
+        match h2 with
+        | D4 h2' => compare_address h1' h2'
         | _ => false
         end
-    | D5 (h1') => 
-        match (h2) with
-        | D5 (h2') => compare_address (h1') (h2')
+    | D5 h1' => 
+        match h2 with
+        | D5 h2' => compare_address h1' h2'
         | _ => false
         end
-    | D6 (h1') => 
-        match (h2) with
-        | D6 (h2') => compare_address (h1') (h2')
+    | D6 h1' => 
+        match h2 with
+        | D6 h2' => compare_address h1' h2'
         | _ => false
         end
-    | D7 (h1') => 
-        match (h2) with
-        | D7 (h2') => compare_address (h1') (h2')
+    | D7 h1' => 
+        match h2 with
+        | D7 h2' => compare_address h1' h2'
         | _ => false
         end
-    | D8 (h1') => 
-        match (h2) with
-        | D8 (h2') => compare_address (h1') (h2')
+    | D8 h1' => 
+        match h2 with
+        | D8 h2' => compare_address h1' h2'
         | _ => false
         end
-    | D9 (h1') => 
-        match (h2) with
-        | D9 (h2') => compare_address (h1') (h2')
+    | D9 h1' => 
+        match h2 with
+        | D9 h2' => compare_address h1' h2'
         | _ => false
         end
-    | Da (h1') => 
-        match (h2) with
-        | Da (h2') => compare_address (h1') (h2')
+    | Da h1' => 
+        match h2 with
+        | Da h2' => compare_address h1' h2'
         | _ => false
         end
-    | Db (h1') => 
-        match (h2) with
-        | Db (h2') => compare_address (h1') (h2')
+    | Db h1' => 
+        match h2 with
+        | Db h2' => compare_address h1' h2'
         | _ => false
         end
-    | Dc (h1') => 
-        match (h2) with
-        | Dc (h2') => compare_address (h1') (h2')
+    | Dc h1' => 
+        match h2 with
+        | Dc h2' => compare_address h1' h2'
         | _ => false
         end
-    | Dd (h1') => 
-        match (h2) with
-        | Dd (h2') => compare_address (h1') (h2')
+    | Dd h1' => 
+        match h2 with
+        | Dd h2' => compare_address h1' h2'
         | _ => false
         end
-    | De (h1') => 
-        match (h2) with
-        | De (h2') => compare_address (h1') (h2')
+    | De h1' => 
+        match h2 with
+        | De h2' => compare_address h1' h2'
         | _ => false
         end
-    | Df (h1') => 
-        match (h2) with
-        | Df (h2') => compare_address (h1') (h2')
+    | Df h1' => 
+        match h2 with
+        | Df h2' => compare_address h1' h2'
         | _ => false
         end
     end.
 
 Lemma compare_same_address : forall (addr : address),
-    compare_address (addr) (addr) = true.
+    compare_address addr addr = true.
 Proof.
     intros. induction addr as [ | l' | l' | l' | l' | l' | l' | l' | 
     l' | l' | l' | l' | l' | l' | l' | l' | l' IHl'].

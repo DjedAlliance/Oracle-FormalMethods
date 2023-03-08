@@ -20,10 +20,10 @@ From OracleFormalization Require Export Functions.
  * from the Oracle.
  *)
 Fixpoint credit_non_negative_all_consumers (allConsumers : AllConsumers) : Prop :=
-    match (allConsumers) with
+    match allConsumers with
     | nil => True
-    | (_, info) :: allConsumers' => ((0 <=? info.(credit)) = true) /\ 
-                                    (credit_non_negative_all_consumers (allConsumers'))
+    | (_, info) :: allConsumers' => 0 <=? info.(credit) = true /\ 
+                                    credit_non_negative_all_consumers allConsumers'
     end.
 
 (*
@@ -31,7 +31,7 @@ Fixpoint credit_non_negative_all_consumers (allConsumers : AllConsumers) : Prop 
  * a single consumer to be non-negative.
  *)
 Definition credit_non_negative_single_consumer (info : ConsumerInfo) : Prop :=
-    ((0 <=? info.(credit))) = true.
+    0 <=? info.(credit) = true.
 
 
 
@@ -39,7 +39,7 @@ Definition credit_non_negative_single_consumer (info : ConsumerInfo) : Prop :=
  * This proves that if the propoerty holds individually for the sublists l1 and l2
  *)
 Theorem credit_non_negative_helper2 : forall (l1 : AllConsumers) (l2 : AllConsumers),
-    credit_non_negative_all_consumers (l1 ++ l2) <-> ((credit_non_negative_all_consumers (l1)) /\ (credit_non_negative_all_consumers (l2))).
+    credit_non_negative_all_consumers (l1 ++ l2) <-> (credit_non_negative_all_consumers l1 /\ credit_non_negative_all_consumers l2).
 Proof.
     intros. induction l1 as [ | (addr, info) l1' IHl1']. split. 
     - simpl. intros. split. reflexivity. apply H.
@@ -66,10 +66,10 @@ Qed.
 Theorem credit_non_negative_helper1 : 
     forall (consumer : address) (elem : ConsumerInfo) (allConsumers : AllConsumers)
     (currModList : AllConsumers),
-    (credit_non_negative_single_consumer (elem)) -> 
-    (credit_non_negative_all_consumers (allConsumers)) ->
-    (credit_non_negative_all_consumers (currModList)) ->
-    credit_non_negative_all_consumers (modify_list (ConsumerInfo) (allConsumers) (consumer) (elem) (currModList)).
+    credit_non_negative_single_consumer elem -> 
+    credit_non_negative_all_consumers allConsumers ->
+    credit_non_negative_all_consumers currModList ->
+    credit_non_negative_all_consumers (modify_list ConsumerInfo allConsumers consumer elem currModList).
 Proof.
     intros consumer elem allConsumers. induction allConsumers as [ | (addr, info) l' IHl'].
     - intros. simpl. apply H1.
@@ -94,8 +94,8 @@ Qed.
  * The proof cases on the event
  *)
 Theorem credit_non_negative : forall (event : Event) (state : State),
-    (credit_non_negative_all_consumers (get_consumers (state))) -> 
-    (credit_non_negative_all_consumers (get_consumers (execute (state) (event)))).
+    credit_non_negative_all_consumers (get_consumers state) -> 
+    credit_non_negative_all_consumers (get_consumers (execute state event)).
 Proof.
     intros. destruct state. destruct oracleState. destruct oracleParameters.
     destruct event. simpl in H.
@@ -186,11 +186,11 @@ Fixpoint split_trace_helper (trace : Trace) (currState : State) (currList : list
     match trace with
     | nil => currList
     | e :: trace' =>
-        let newState := execute (currState) (e)
+        let newState := execute currState e
         in
             match e with
-            | DataWritten (_) (_) (_) => currList
-            | _ => split_trace_helper (trace') (newState) (currList ++ ((currState, e) :: nil))
+            | DataWritten _ _ _ => currList
+            | _ => split_trace_helper trace' newState (currList ++ ((currState, e) :: nil))
             end
     end.
 
@@ -207,16 +207,16 @@ Fixpoint split_trace (trace : Trace) (currState : State) (subLists : list (list 
     match trace with
     | nil => subLists
     | e :: trace' =>
-        let newState := execute (currState) (e)
+        let newState := execute currState e
         in
             match e with
-            | DataWritten (_) (_) (_) => split_trace (trace') (newState) (subLists ++ ((split_trace_helper (trace') (newState) (nil)) :: nil))
-            | _ => split_trace (trace') (newState) (subLists)
+            | DataWritten _ _ _ => split_trace trace' newState (subLists ++ ((split_trace_helper trace' newState nil) :: nil))
+            | _ => split_trace trace' newState subLists
             end
     end.
 
 
-Fixpoint split_trace_correct_prop (mergeSlice : list (State * Event)) (trace : list (Event)) : Prop :=
+Fixpoint split_trace_correct_prop (mergeSlice : list (State * Event)) (trace : list Event) : Prop :=
     match trace with
     | nil => 
         match mergeSlice with
@@ -225,34 +225,34 @@ Fixpoint split_trace_correct_prop (mergeSlice : list (State * Event)) (trace : l
         end
     | e :: trace' => 
         match e with
-        | DataWritten (_) (_) (_) => split_trace_correct_prop (mergeSlice) (trace')
+        | DataWritten _ _ _ => split_trace_correct_prop mergeSlice trace'
         | _ => 
             match mergeSlice with
             | nil => False
-            | (_, event) :: mergeSlice' => (event = e) /\ (split_trace_correct_prop (mergeSlice') (trace'))
+            | (_, event) :: mergeSlice' => event = e /\ split_trace_correct_prop mergeSlice' trace'
             end
         end
     end.
 
-Fixpoint my_remove_event (trace : list (Event)) : list (Event) :=
+Fixpoint my_remove_event (trace : list Event) : list Event :=
     match trace with
     | nil => nil
     | e :: trace' =>
         match e with
-        | DataWritten (_) (_) (_) => my_remove_event (trace')
-        | _ => e :: (my_remove_event (trace'))
+        | DataWritten _ _ _ => my_remove_event trace'
+        | _ => e :: (my_remove_event trace')
         end
     end.
 
-Fixpoint my_remove_state (splitList : list (State * Event)) : list (Event) :=
+Fixpoint my_remove_state (splitList : list (State * Event)) : list Event :=
     match splitList with
     | nil => nil
-    | (state, event) :: splitList' => event :: (my_remove_state (splitList'))
+    | (state, event) :: splitList' => event :: (my_remove_state splitList')
     end.
 
 Theorem my_remove_event_removes_datawritten :
-    forall (trace1 : list (Event)) (trace2 : list (Event)),
-    my_remove_event (trace1 ++ trace2) = my_remove_event (trace1) ++ my_remove_event (trace2).
+    forall (trace1 : list Event) (trace2 : list Event),
+    my_remove_event (trace1 ++ trace2) = my_remove_event trace1 ++ my_remove_event trace2.
 
 Proof.
     intros. induction trace1 as [ | e l' IHl'].
@@ -281,32 +281,34 @@ Qed.
  * data for the first time and should pay
  *)
 Fixpoint all_consumers_pay_once_slice (slice : list (State * Event)) : Prop :=
-    match (slice) with
+    match slice with
     | nil => True
     | (state, event) :: slice' => 
-        match (event) with
-        | DataRead (consumer) (Weight) (data) =>
-            let latestWrite := get_latest_write (state) in
-            let consumerInfo := get_consumer_info (get_consumers (state)) (consumer) in
-            let baseFee := get_base_fee (state) in
+        match event with
+        | DataRead consumer Weight data =>
+            let latestWrite := get_latest_write state in
+            let consumerInfo := get_consumer_info (get_consumers state) consumer in
+            let baseFee := get_base_fee state in
             let weightConsumer := consumerInfo.(weight) in
-            let feeConsumer := ((weightConsumer * baseFee)) in
+            let feeConsumer := weightConsumer * baseFee in
             let latestReadConsumer := consumerInfo.(latestRead) in
             let (totalRevenueBefore, totalRevenueAfter) := 
-                (get_total_revenue (state), get_total_revenue (execute (state) (event))) in
+                (get_total_revenue state, get_total_revenue (execute state event)) in
 
-                (((latestWrite <? latestReadConsumer) = true) ->
-                ((totalRevenueAfter = totalRevenueBefore) /\ 
-                 (all_consumers_pay_once_slice (slice')))) 
+                (latestWrite <? latestReadConsumer = true ->
+                  (totalRevenueAfter = totalRevenueBefore /\ 
+                   all_consumers_pay_once_slice slice')) 
                 /\ 
-                (((latestWrite <? latestReadConsumer) = false) ->
-                (((((consumerInfo.(credit) <? feeConsumer) = true) -> 
+                (latestWrite <? latestReadConsumer = false ->
+                (((consumerInfo.(credit) <? feeConsumer = true -> 
                     totalRevenueAfter = totalRevenueBefore) 
                     /\ 
-                    (((consumerInfo.(credit) <? feeConsumer) = false) -> 
-                    totalRevenueAfter = (totalRevenueBefore + feeConsumer))) /\ 
-                (all_consumers_pay_once_slice (slice'))))
-        | _ => all_consumers_pay_once_slice (slice')
+                    (consumerInfo.(credit) <? feeConsumer = false -> 
+                    totalRevenueAfter = totalRevenueBefore + feeConsumer)
+                  ) 
+                  /\ 
+                  all_consumers_pay_once_slice slice'))
+        | _ => all_consumers_pay_once_slice slice'
         end
     end.
 
@@ -319,10 +321,10 @@ Fixpoint all_consumers_pay_once_slice (slice : list (State * Event)) : Prop :=
  * to reason about the reversed list 
  *)    
 Fixpoint all_consumers_pay_once (splitList : list (list (State * Event))) : Prop :=
-    match (splitList) with
+    match splitList with
     | nil => True
-    | slice :: splitList' => (all_consumers_pay_once_slice (rev (slice))) 
-                            /\ (all_consumers_pay_once (splitList'))
+    | slice :: splitList' => all_consumers_pay_once_slice (rev slice) 
+                            /\ all_consumers_pay_once splitList'
     end.
 
 
@@ -335,9 +337,9 @@ Fixpoint no_data_written_in_slice (slice : list (State * Event)) : Prop :=
     match slice with
     | nil => True
     | (_, event) :: eventHistory' => 
-        match (event) with
-        | DataWritten (_) (_) (_) => False
-        | _ => True /\ (no_data_written_in_slice (eventHistory'))
+        match event with
+        | DataWritten _ _ _ => False
+        | _ => True /\ no_data_written_in_slice eventHistory'
         end
     end.
 
@@ -350,8 +352,8 @@ Fixpoint no_data_written_in_slice (slice : list (State * Event)) : Prop :=
 Fixpoint no_data_written_subLists (subList : list (list (State * Event))) : Prop :=
     match subList with
     | nil => True
-    | slice :: subList' => (no_data_written_in_slice (slice)) /\ 
-                            (no_data_written_subLists (subList'))
+    | slice :: subList' => no_data_written_in_slice slice /\ 
+                            no_data_written_subLists subList'
     end.
 
 
@@ -364,7 +366,7 @@ Fixpoint no_data_written_subLists (subList : list (list (State * Event))) : Prop
  * The rest of the cases are easy and have exactly the same proof.
  *)
 Theorem consumer_pays_once_slice : forall (slice : list (State * Event)),
-    no_data_written_in_slice (slice) -> all_consumers_pay_once_slice (slice).
+    no_data_written_in_slice slice -> all_consumers_pay_once_slice slice.
 Proof.
     intros. induction slice as [ | (s, e) l' IHl'].
     - simpl. reflexivity.
@@ -457,7 +459,7 @@ Qed.
  *)
 Theorem no_data_written_rev_split :
     forall (l1 : list (State * Event)) (l2 : list (State * Event)),
-    no_data_written_in_slice (l1 ++ l2) -> no_data_written_in_slice (l1) /\ no_data_written_in_slice (l2).
+    no_data_written_in_slice (l1 ++ l2) -> no_data_written_in_slice l1 /\ no_data_written_in_slice l2.
 Proof.
     intros. induction l1 as [ | (s, e) l' IHl'].
     - simpl in H. split.
@@ -493,7 +495,7 @@ Qed.
  *)
 Theorem no_data_written_in_slice_proof_helper1 :
     forall (l1 : list (State * Event)) (l2 : list (State * Event)),
-    (no_data_written_in_slice (l1) /\ no_data_written_in_slice (l2)) -> no_data_written_in_slice (l1 ++ l2).
+    (no_data_written_in_slice l1 /\ no_data_written_in_slice l2) -> no_data_written_in_slice (l1 ++ l2).
 
 Proof.
     intros. induction l1 as [ | e l1' IHl1'].
@@ -519,7 +521,7 @@ Qed.
  *)
 Theorem no_data_written_rev :
     forall (slice : list (State * Event)),
-    no_data_written_in_slice (rev (slice)) -> no_data_written_in_slice (slice).
+    no_data_written_in_slice (rev slice) -> no_data_written_in_slice slice.
 Proof.
     intros. induction slice as [ | (s, e) l' IHl'].
     - simpl. reflexivity.
@@ -544,7 +546,7 @@ Qed.
  *)
 Theorem consumers_pay_once :  
     forall (splitList : list (list (State * Event))),
-    no_data_written_subLists (splitList) -> all_consumers_pay_once (splitList).
+    no_data_written_subLists splitList -> all_consumers_pay_once splitList.
 
 Proof.
     intros. induction splitList as [ | x l' IHl'].
@@ -561,7 +563,7 @@ Qed.
  *)
 Theorem no_data_written_when_list_split_helper1 :
     forall (l1 : list (list (State * Event))) (l2 : list (list (State * Event))),
-    (no_data_written_subLists (l1) /\ no_data_written_subLists (l2)) -> no_data_written_subLists (l1 ++ l2).
+    (no_data_written_subLists l1 /\ no_data_written_subLists l2) -> no_data_written_subLists (l1 ++ l2).
 
 Proof.
     intros. induction l1 as [ | e l1' IHl1'].
@@ -592,7 +594,7 @@ Qed.
  *)
 Theorem no_data_written_in_slice_proof :
     forall (trace : list (Event)) (startState : State) (sliceSoFar : list (State * Event)),
-    no_data_written_in_slice (sliceSoFar) -> no_data_written_in_slice (split_trace_helper (trace) (startState) (sliceSoFar)).
+    no_data_written_in_slice sliceSoFar -> no_data_written_in_slice (split_trace_helper trace startState sliceSoFar).
 
 Proof.
     intros trace. induction trace as [ | e l' IHl'].
@@ -617,8 +619,8 @@ Qed.
  * data written events in the list of slices returned by split_trace called on trace, startState and splitsSoFar
  *)
 Theorem no_data_written_when_list_split :
-    forall (trace : list (Event)) (startState : State) (splitsSoFar : list (list (State * Event))),
-    no_data_written_subLists (splitsSoFar) -> no_data_written_subLists (split_trace (trace) (startState) (splitsSoFar)).
+    forall (trace : list Event) (startState : State) (splitsSoFar : list (list (State * Event))),
+    no_data_written_subLists splitsSoFar -> no_data_written_subLists (split_trace trace startState splitsSoFar).
 
 Proof.
     intros trace. induction trace as [ | e l' IHl'].
@@ -650,7 +652,7 @@ Qed.
  *)
 Theorem all_consumers_pay_once_proof :
     forall (state : State) (baseFee : nat),
-    all_consumers_pay_once (split_trace (get_trace (state)) (constructor (get_owner (state)) (get_description (state)) (get_locking_period (state)) (baseFee)) (nil)).
+    all_consumers_pay_once (split_trace (get_trace state) (constructor (get_owner state) (get_description state) (get_locking_period state) baseFee) nil).
 
 Proof.
     intros. destruct state. destruct oracleParameters.
