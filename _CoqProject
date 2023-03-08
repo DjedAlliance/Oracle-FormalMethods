@@ -1,1 +1,5 @@
--Q . ORACLE
+-R . OracleFormalization
+Hexadecimal.v
+protocolV2.v
+defs.v
+specs.v

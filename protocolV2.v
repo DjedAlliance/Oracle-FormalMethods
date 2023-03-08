@@ -6,7 +6,7 @@ Require Import Reals.
 Require Import Floats.
 Require Import List.
 Require Import Coq.Strings.String.
-From ORACLE Require Export defs.
+From OracleFormalization Require Export defs.
 
 
 (*
