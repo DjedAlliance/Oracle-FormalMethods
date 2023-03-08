@@ -81,7 +81,8 @@ Definition register_consumer (consumer : address)
 
 
 (*
- * Function Definitions
+ * FUNCTIONS
+ * Corresponds to those in the oracle smart contract
  *)
 
 Definition constructor (owner : address) 
