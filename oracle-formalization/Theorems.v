@@ -39,7 +39,8 @@ Definition credit_non_negative_single_consumer (info : ConsumerInfo) : Prop :=
  * This proves that if the propoerty holds individually for the sublists l1 and l2
  *)
 Theorem credit_non_negative_helper2 : forall (l1 : AllConsumers) (l2 : AllConsumers),
-    credit_non_negative_all_consumers (l1 ++ l2) <-> (credit_non_negative_all_consumers l1 /\ credit_non_negative_all_consumers l2).
+    credit_non_negative_all_consumers (l1 ++ l2) <-> 
+    (credit_non_negative_all_consumers l1 /\ credit_non_negative_all_consumers l2).
 Proof.
     intros. induction l1 as [ | (addr, info) l1' IHl1']. split. 
     - simpl. intros. split. reflexivity. apply H.
@@ -296,15 +297,12 @@ Fixpoint all_consumers_pay_once_slice (slice : list (State * Event)) : Prop :=
                 (get_total_revenue state, get_total_revenue (execute state event)) in
 
                 (latestWrite <? latestReadConsumer = true ->
-                  (totalRevenueAfter = totalRevenueBefore /\ 
-                   all_consumers_pay_once_slice slice')) 
+                  (totalRevenueAfter = totalRevenueBefore /\ all_consumers_pay_once_slice slice')) 
                 /\ 
                 (latestWrite <? latestReadConsumer = false ->
-                (((consumerInfo.(credit) <? feeConsumer = true -> 
-                    totalRevenueAfter = totalRevenueBefore) 
+                (((consumerInfo.(credit) <? feeConsumer = true -> totalRevenueAfter = totalRevenueBefore) 
                     /\ 
-                    (consumerInfo.(credit) <? feeConsumer = false -> 
-                    totalRevenueAfter = totalRevenueBefore + feeConsumer)
+                    (consumerInfo.(credit) <? feeConsumer = false -> totalRevenueAfter = totalRevenueBefore + feeConsumer)
                   ) 
                   /\ 
                   all_consumers_pay_once_slice slice'))
@@ -323,8 +321,7 @@ Fixpoint all_consumers_pay_once_slice (slice : list (State * Event)) : Prop :=
 Fixpoint all_consumers_pay_once (splitList : list (list (State * Event))) : Prop :=
     match splitList with
     | nil => True
-    | slice :: splitList' => all_consumers_pay_once_slice (rev slice) 
-                            /\ all_consumers_pay_once splitList'
+    | slice :: splitList' => all_consumers_pay_once_slice (rev slice) /\ all_consumers_pay_once splitList'
     end.
 
 
@@ -353,7 +350,7 @@ Fixpoint no_data_written_subLists (subList : list (list (State * Event))) : Prop
     match subList with
     | nil => True
     | slice :: subList' => no_data_written_in_slice slice /\ 
-                            no_data_written_subLists subList'
+                           no_data_written_subLists subList'
     end.
 
 
@@ -652,7 +649,12 @@ Qed.
  *)
 Theorem all_consumers_pay_once_proof :
     forall (state : State) (baseFee : nat),
-    all_consumers_pay_once (split_trace (get_trace state) (constructor (get_owner state) (get_description state) (get_locking_period state) baseFee) nil).
+    all_consumers_pay_once (split_trace (get_trace state) 
+                                        (constructor (get_owner state) 
+                                                     (get_description state) 
+                                                     (get_locking_period state) 
+                                                     baseFee) 
+                                        nil).
 
 Proof.
     intros. destruct state. destruct oracleParameters.
