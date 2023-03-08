@@ -12,20 +12,6 @@ From OracleFormalization Require Export Datatypes.
  * HELPER FUNCTIONS
  *)
 
-Definition max_nat (num1 : nat) (num2 : nat) : nat :=
-    if (num1 <? num2)
-    then
-        num2
-    else
-        num1.
-
-Definition min_nat (num1 : nat) (num2 : nat) : nat :=
-    if (num1 <? num2)
-    then
-        num1
-    else
-        num2.
-
 Definition get_total_revenue (state : State) : nat :=
     state.(oracleState).(totalRevenue).
 
@@ -49,32 +35,6 @@ Definition get_locking_period (state : State) : nat :=
 
 Definition get_trace (state : State) : Trace :=
     state.(trace).
-
-(* 
- * This function checks if a consumer with the address 'consumer' exists in the target list
- *)
- Fixpoint consumer_exists (consumer : address) 
-                          (type : Type) 
-                          (targetList : list (address * type)) : bool :=
-    match (targetList) with
-    | nil => false
-    | (addr, _) :: targetList' => 
-        match (compare_address (addr) (consumer)) with
-        | true => true
-        | _ => consumer_exists (consumer) (type) (targetList')
-        end
-    end.
-
-
-(* 
- * This function checks if the targetList is empty or not
- *)
-Definition not_empty (type : Type) 
-                     (targetList : list (address * type)) : Prop :=
-    match targetList with
-    | nil => False
-    | (addr, _) :: targetList' => True
-    end.
 
 (*
  * Assuming the element already exists in the array and only one such address exists
@@ -106,12 +66,6 @@ Fixpoint get_consumer_info (allConsumers : list (address * ConsumerInfo))
         else
             get_consumer_info (allConsumers') (targetAddress)
     end.
-
-Definition get_latest_read_consumer (consumer : address) (state : State) : nat :=
-    let 
-      consumerInfo := get_consumer_info (get_consumers (state)) (consumer) 
-    in
-      consumerInfo.(latestRead).
 
 Definition register_consumer (consumer : address) 
                              (consumerList : AllConsumers) 
