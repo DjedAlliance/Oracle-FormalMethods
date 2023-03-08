@@ -200,7 +200,7 @@ Definition get_credit_consumer (consumer : address) (allConsumers : AllConsumers
     let consumerInfo := get_consumer_info (allConsumers) (consumer) in
     consumerInfo.(credit).
 
-Definition read_data (state : State) (consumer : address) : (State * ValueOption float) :=
+Definition read_data (state : State) (consumer : address) : (State * option float) :=
     let oldOracleState := state.(oracleState) in
     let oldOracleParams := state.(oracleParameters) in
     let oldTrace := state.(trace) in
@@ -215,7 +215,7 @@ Definition read_data (state : State) (consumer : address) : (State * ValueOption
     let data := oldOracleState.(data) 
     in
         if (credit <? fee)
-        then (state, None float)
+        then (state, None)
         else
             let newConsumerInfo := Build_ConsumerInfo (credit - fee) 
                                                       (oldOracleState.(timeStamp) + 1) 
@@ -248,15 +248,15 @@ Definition read_data (state : State) (consumer : address) : (State * ValueOption
                                         (oldOracleParams) 
                                         (oldTrace ++ ((DataRead (consumer) (weight) (data)) :: nil)) 
             in
-              (newState, Some float (data)).
+              (newState, Some (data)).
 
-Definition inspectData (caller : address) (state : State) : ValueOption float :=
+Definition inspectData (caller : address) (state : State) : option float :=
     let oldOracleState  := state.(oracleState) in
     let oldOracleParams := state.(oracleParameters) 
     in
         if (compare_address (oldOracleParams.(owner)) (caller))
-        then Some (float) (oldOracleState.(data))
-        else None float.
+        then Some (oldOracleState.(data))
+        else None.
 
 Definition schedule_weight_adjustment (consumer : address) 
                                       (caller : address) 

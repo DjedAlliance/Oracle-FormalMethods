@@ -15,10 +15,6 @@ From OracleFormalization Require Export Hexadecimal.
  * What to do if the address doesn't exist in the mapping?
  *)
 
-Inductive ValueOption (type : Type) : Type :=
-    | Some (val : type)
-    | None.
-
 Inductive Event : Type :=
     | DataWritten (newData : float) (newCost : nat) (caller : address)
     | DataRead (consumer : address) (weight : nat) (data : float)
