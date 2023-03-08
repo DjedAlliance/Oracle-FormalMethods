@@ -1,5 +1,8 @@
--R . OracleFormalization
-Hexadecimal.v
-protocolV2.v
-defs.v
-specs.v
+# Maps a physical path directory (oracle-formalization) to the
+# project's namespace (OracleFormalization)
+-Q oracle-formalization OracleFormalization
+
+oracle-formalization/Hexadecimal.v
+oracle-formalization/protocolV2.v
+oracle-formalization/defs.v
+oracle-formalization/specs.v
