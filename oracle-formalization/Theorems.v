@@ -6,7 +6,7 @@ Require Import Reals.
 Require Import Floats.
 Require Import List.
 Require Import Coq.Strings.String.
-From OracleFormalization Require Export protocolV2.
+From OracleFormalization Require Export Functions.
 
 
 (*
@@ -112,7 +112,7 @@ Proof.
     + simpl. unfold read_data. simpl. simpl.
       case_eq (credit (get_consumer_info allConsumers consumer) <?
       fee_of consumer
-      (defs.weight (get_consumer_info allConsumers consumer))
+      (Datatypes.weight (get_consumer_info allConsumers consumer))
       allConsumers latestWrite baseFee).
         intros. simpl. simpl in H. apply H.
         intros. simpl. apply credit_non_negative_helper1.
@@ -401,7 +401,7 @@ Proof.
 
                     intros.
                     case_eq (credit (get_consumer_info (allConsumers (oracleState s)) consumer) <?
-                    defs.weight (get_consumer_info (allConsumers (oracleState s)) consumer) *
+                    Datatypes.weight (get_consumer_info (allConsumers (oracleState s)) consumer) *
                     baseFee (oracleState s)).
                         intros. reflexivity.
 
@@ -418,7 +418,7 @@ Proof.
 
                     intros.
                     case_eq (credit (get_consumer_info (allConsumers (oracleState s)) consumer) <?
-                    defs.weight (get_consumer_info (allConsumers (oracleState s)) consumer) *
+                    Datatypes.weight (get_consumer_info (allConsumers (oracleState s)) consumer) *
                     baseFee (oracleState s)).
                         intros. unfold get_consumers in H1. unfold get_latest_write in H1.
                         unfold get_base_fee in H1. rewrite -> H3 in H1. discriminate H1.

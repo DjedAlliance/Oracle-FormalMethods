@@ -3,6 +3,6 @@
 -Q oracle-formalization OracleFormalization
 
 oracle-formalization/Hexadecimal.v
-oracle-formalization/protocolV2.v
-oracle-formalization/defs.v
-oracle-formalization/specs.v
+oracle-formalization/Datatypes.v
+oracle-formalization/Functions.v
+oracle-formalization/Theorems.v
