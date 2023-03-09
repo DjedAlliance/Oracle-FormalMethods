@@ -164,7 +164,7 @@ Proof.
         simpl. intros. simpl in H. apply H.
         simpl. intros. simpl in H. apply H.
 Qed.
-            
+
 
 
 (*
@@ -317,7 +317,7 @@ Fixpoint all_consumers_pay_once_slice (slice : list (State * Event)) : Prop :=
  * because initially every slice is ordered from least recent to most recent event
  * (least recent) at the head of the list. It makes more sense later in the inductive proof
  * to reason about the reversed list 
- *)    
+ *)
 Fixpoint all_consumers_pay_once (splitList : list (list (State * Event))) : Prop :=
     match splitList with
     | nil => True
@@ -336,10 +336,9 @@ Fixpoint no_data_written_in_slice (slice : list (State * Event)) : Prop :=
     | (_, event) :: eventHistory' => 
         match event with
         | DataWritten _ _ _ => False
-        | _ => True /\ no_data_written_in_slice eventHistory'
+        | _ => no_data_written_in_slice eventHistory'
         end
     end.
-
 
 (*
  * This function tells us what it means for there to be no DataWritten event 
@@ -380,8 +379,8 @@ Proof.
                 intros. unfold get_latest_write in H0. unfold get_consumers in H0.
                 simpl in H0. rewrite -> H1 in H0. discriminate H0.
 
-            apply IHl'. unfold no_data_written_in_slice in H. destruct H. 
-            fold no_data_written_in_slice in H1. apply H1.
+            apply IHl'. unfold no_data_written_in_slice in H.
+            fold no_data_written_in_slice in H. apply H.
       * intros. split.
             split. 
                 intros. unfold read_data. unfold fee_of. simpl.
@@ -417,35 +416,35 @@ Proof.
 
                         intros. unfold get_total_revenue. simpl. reflexivity.
 
-            apply IHl'. unfold no_data_written_in_slice in H. destruct H.
-            fold no_data_written_in_slice in H1. apply H1.
+            apply IHl'. unfold no_data_written_in_slice in H.
+            fold no_data_written_in_slice in H. apply H.
     + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H. destruct H.
-      fold no_data_written_in_slice in H0. apply H0.
+      unfold no_data_written_in_slice in H.
+      fold no_data_written_in_slice in H. apply H.
     + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H. destruct H.
-      fold no_data_written_in_slice in H0. apply H0.
+      unfold no_data_written_in_slice in H.
+      fold no_data_written_in_slice in H. apply H.
     + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H. destruct H.
-      fold no_data_written_in_slice in H0. apply H0.
+      unfold no_data_written_in_slice in H.
+      fold no_data_written_in_slice in H. apply H.
     + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H. destruct H.
-      fold no_data_written_in_slice in H0. apply H0.
+      unfold no_data_written_in_slice in H.
+      fold no_data_written_in_slice in H. apply H.
     + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H. destruct H.
-      fold no_data_written_in_slice in H0. apply H0.
+      unfold no_data_written_in_slice in H.
+      fold no_data_written_in_slice in H. apply H.
     + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H. destruct H.
-      fold no_data_written_in_slice in H0. apply H0.
+      unfold no_data_written_in_slice in H.
+      fold no_data_written_in_slice in H. apply H.
     + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H. destruct H.
-      fold no_data_written_in_slice in H0. apply H0.
+      unfold no_data_written_in_slice in H.
+      fold no_data_written_in_slice in H. apply H.
     + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H. destruct H.
-      fold no_data_written_in_slice in H0. apply H0.
+      unfold no_data_written_in_slice in H.
+      fold no_data_written_in_slice in H. apply H.
     + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H. destruct H.
-      fold no_data_written_in_slice in H0. apply H0.
+      unfold no_data_written_in_slice in H.
+      fold no_data_written_in_slice in H. apply H.
 Qed.
 
 
@@ -464,26 +463,26 @@ Proof.
         apply H.
     - destruct e.
         + contradiction.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
-        + simpl in H. destruct H. simpl. split. split.
-            reflexivity. apply IHl' in H0. destruct H0. apply H0. apply IHl' in H0. destruct H0. apply H1.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
+        + simpl in H. simpl.
+            apply IHl' in H. auto.
 Qed.
 
 (*
@@ -499,17 +498,17 @@ Proof.
     - simpl. simpl in H. destruct H. apply H0.
     - destruct e. destruct e.
        simpl. simpl in H. destruct H. contradiction.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. reflexivity. apply IHl1'. split. apply H1. apply H0.
-Qed.  
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+Qed.
 
 
 (*
@@ -524,16 +523,16 @@ Proof.
     - simpl. reflexivity.
     - simpl. simpl in H. apply no_data_written_rev_split in H. destruct e. 
         + destruct H. simpl in H0. apply H0.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
-        + split. reflexivity. apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
+        + apply IHl'. destruct H. apply H.
 Qed.
 
 
@@ -571,16 +570,16 @@ Proof.
         apply IHl1'. split. destruct H. apply H1. apply H0. 
      + destruct p. destruct e0.
        simpl. simpl in H. destruct H. destruct H. contradiction.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. split. reflexivity. destruct H. apply H2. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
 Qed.
 
       
@@ -598,16 +597,16 @@ Proof.
     - simpl. intros. apply H.
     - intros. destruct e.
         + simpl. apply H.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. split. reflexivity. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
 Qed.
 
 
@@ -636,7 +635,6 @@ Proof.
      + simpl. apply IHl'. apply H.
      + simpl. apply IHl'. apply H.
 Qed.
-       
 
 (*
  * This theorem closes the proof. It says that given some state and baseFee (The baseFee is supposed to be the 
