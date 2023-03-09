@@ -33,8 +33,6 @@ Fixpoint credit_non_negative_all_consumers (allConsumers : AllConsumers) : Prop 
 Definition credit_non_negative_single_consumer (info : ConsumerInfo) : Prop :=
     0 <=? info.(credit) = true.
 
-
-
 (*
  * This proves that if the propoerty holds individually for the sublists l1 and l2
  *)
@@ -85,8 +83,7 @@ Proof.
          apply H3. apply credit_non_negative_helper2.
          split. apply H1. simpl. split. apply H0. reflexivity.
 Qed.
-        
- 
+
 (*
  * This is the main theorem. It proves that given an event and state of the oracle
  * if the credit of all the consumers is non negative then after the event the credit
@@ -216,7 +213,6 @@ Fixpoint split_trace (trace : Trace) (currState : State) (subLists : list (list 
             end
     end.
 
-
 Fixpoint split_trace_correct_prop (mergeSlice : list (State * Event)) (trace : list Event) : Prop :=
     match trace with
     | nil => 
@@ -272,7 +268,6 @@ Proof.
         + rewrite -> IHl'. reflexivity.
 Qed.
 
-
 (*
  * This function takes in a slice (record of events between 2 arbitrary DataWritten events) and 
  * returns a Proposition. This proposition states what it means for every consumer to pay
@@ -310,7 +305,6 @@ Fixpoint all_consumers_pay_once_slice (slice : list (State * Event)) : Prop :=
         end
     end.
 
- 
 (*
  * It makes sure that the above property holds for all the slices in the list 
  * returned by 'split_trace' (splitList). It applied the 'rev' function on the slice
@@ -323,7 +317,6 @@ Fixpoint all_consumers_pay_once (splitList : list (list (State * Event))) : Prop
     | nil => True
     | slice :: splitList' => all_consumers_pay_once_slice (rev slice) /\ all_consumers_pay_once splitList'
     end.
-
 
 (*
  * This function tells us what it means for there to be no DataWritten event 
@@ -351,7 +344,6 @@ Fixpoint no_data_written_subLists (subList : list (list (State * Event))) : Prop
     | slice :: subList' => no_data_written_in_slice slice /\ 
                            no_data_written_subLists subList'
     end.
-
 
 (*
  * This is part of the main proof. We prove that if we have no 'DataWritten' event in a slice
@@ -447,8 +439,6 @@ Proof.
       fold no_data_written_in_slice in H. apply H.
 Qed.
 
-
-
 (*
  * This just proves that if a given property (no_data_written_in_slice) holds for two lists (l1, l2) appended
  * together than the given property also holds for the two lists individually
@@ -510,7 +500,6 @@ Proof.
        simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
 Qed.
 
-
 (*
  * This states if there are no DataWritten events in rev (slice) then there are no
  * DataWritten events in the slice as well
@@ -535,7 +524,6 @@ Proof.
         + apply IHl'. destruct H. apply H.
 Qed.
 
-
 (*
  * This states that if there are no DataWritten events in the list of slices (splitList) then
  * all consumers pay exactly once for all the slices
@@ -551,7 +539,6 @@ Proof.
       simpl in H. destruct H. apply consumer_pays_once_slice. apply no_data_written_rev. rewrite -> rev_involutive. apply H.
       apply IHl'. simpl in H. destruct H. apply H0.
 Qed.
-
 
 (*
  * This states that if the property no_data_written_subLists holds for two lists of slices (l1, l2) individually
@@ -582,8 +569,6 @@ Proof.
        simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
 Qed.
 
-      
-
 (*
  * This proves that assuming we have no data written events in the slice given by 'sliceSoFar' then
  * we will have no data written events in the slice returned by split_trace_helper called on the trace, startState and the sliceSoFar
@@ -608,7 +593,6 @@ Proof.
         + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
         + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
 Qed.
-
 
 (*
  * This proves that assuming we have no data written events in the list of slices given by 'splitsSoFar', we will have no
