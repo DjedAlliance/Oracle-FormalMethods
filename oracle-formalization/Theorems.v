@@ -283,17 +283,17 @@ Fixpoint all_consumers_pay_once_slice (slice : list (State * Event)) : Prop :=
             let latestReadConsumer := consumerInfo.(latestRead) in
             let (totalRevenueBefore, totalRevenueAfter) := 
                 (get_total_revenue state, get_total_revenue (execute state event)) in
-
-                (latestWrite <? latestReadConsumer = true ->
-                  (totalRevenueAfter = totalRevenueBefore /\ all_consumers_pay_once_slice slice')) 
+                (  latestWrite <? latestReadConsumer = true -> 
+                   totalRevenueAfter = totalRevenueBefore /\ all_consumers_pay_once_slice slice'
+                ) 
                 /\ 
-                (latestWrite <? latestReadConsumer = false ->
-                (((consumerInfo.(credit) <? feeConsumer = true -> totalRevenueAfter = totalRevenueBefore) 
-                    /\ 
-                    (consumerInfo.(credit) <? feeConsumer = false -> totalRevenueAfter = totalRevenueBefore + feeConsumer)
-                  ) 
-                  /\ 
-                  all_consumers_pay_once_slice slice'))
+                (  latestWrite <? latestReadConsumer = false ->
+                   (consumerInfo.(credit) <? feeConsumer = true -> totalRevenueAfter = totalRevenueBefore) 
+                   /\ 
+                   (consumerInfo.(credit) <? feeConsumer = false -> totalRevenueAfter = totalRevenueBefore + feeConsumer)
+                   /\ 
+                   all_consumers_pay_once_slice slice'
+                )
         | _ => all_consumers_pay_once_slice slice'
         end
     end.
@@ -366,8 +366,7 @@ Proof.
 
             apply IHl'. unfold no_data_written_in_slice in H.
             fold no_data_written_in_slice in H. apply H.
-      * intros. split.
-            split. 
+      * intros; repeat split.
                 intros. unfold read_data. unfold fee_of. simpl.
                 case_eq (latestWrite (oracleState s) <?
                 latestRead
@@ -392,14 +391,14 @@ Proof.
                     intros. unfold get_consumers in H0. unfold get_latest_write in H0.
                     rewrite -> H2 in H0. discriminate.
 
-                    intros.
-                    case_eq (credit (get_consumer_info (allConsumers (oracleState s)) consumer) <?
-                    Datatypes.weight (get_consumer_info (allConsumers (oracleState s)) consumer) *
-                    baseFee (oracleState s)).
-                        intros. unfold get_consumers in H1. unfold get_latest_write in H1.
-                        unfold get_base_fee in H1. rewrite -> H3 in H1. discriminate H1.
+                intros.
+                case_eq (credit (get_consumer_info (allConsumers (oracleState s)) consumer) <?
+                Datatypes.weight (get_consumer_info (allConsumers (oracleState s)) consumer) *
+                baseFee (oracleState s)).
+                    intros. unfold get_consumers in H1. unfold get_latest_write in H1.
+                    unfold get_base_fee in H1. rewrite -> H3 in H1. discriminate H1.
 
-                        intros. unfold get_total_revenue. simpl. reflexivity.
+                     intros. unfold get_total_revenue. simpl. reflexivity.
 
             apply IHl'. unfold no_data_written_in_slice in H.
             fold no_data_written_in_slice in H. apply H.
