@@ -255,17 +255,10 @@ Proof.
     intros. induction trace1 as [ | e l' IHl'].
     - simpl. reflexivity.
     - simpl. destruct e.
-        + apply IHl'.
-        + rewrite -> IHl'. reflexivity.
-        + rewrite -> IHl'. reflexivity.
-        + rewrite -> IHl'. reflexivity.
-        + rewrite -> IHl'. reflexivity.
-        + rewrite -> IHl'. reflexivity.
-        + rewrite -> IHl'. reflexivity.
-        + rewrite -> IHl'. reflexivity.
-        + rewrite -> IHl'. reflexivity.
-        + rewrite -> IHl'. reflexivity.
-        + rewrite -> IHl'. reflexivity.
+        (* First sub-goal *)
+        apply IHl'.
+        (* Remaining sug-goals *)
+        all: (rewrite -> IHl'; reflexivity).
 Qed.
 
 (*
@@ -358,7 +351,9 @@ Theorem consumer_pays_once_slice : forall (slice : list (State * Event)),
 Proof.
     intros. induction slice as [ | (s, e) l' IHl'].
     - simpl. reflexivity.
-    - destruct e.
+    - destruct e ; try (simpl; apply IHl';
+                        unfold no_data_written_in_slice in H;
+                        fold no_data_written_in_slice in H; apply H).
      + simpl. inversion H.
      + simpl. split.
       * intros. split. 
@@ -410,33 +405,6 @@ Proof.
 
             apply IHl'. unfold no_data_written_in_slice in H.
             fold no_data_written_in_slice in H. apply H.
-    + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H.
-      fold no_data_written_in_slice in H. apply H.
-    + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H.
-      fold no_data_written_in_slice in H. apply H.
-    + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H.
-      fold no_data_written_in_slice in H. apply H.
-    + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H.
-      fold no_data_written_in_slice in H. apply H.
-    + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H.
-      fold no_data_written_in_slice in H. apply H.
-    + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H.
-      fold no_data_written_in_slice in H. apply H.
-    + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H.
-      fold no_data_written_in_slice in H. apply H.
-    + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H.
-      fold no_data_written_in_slice in H. apply H.
-    + simpl. apply IHl'. 
-      unfold no_data_written_in_slice in H.
-      fold no_data_written_in_slice in H. apply H.
 Qed.
 
 (*
@@ -452,27 +420,10 @@ Proof.
         simpl. reflexivity.
         apply H.
     - destruct e.
-        + contradiction.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
-        + simpl in H. simpl.
-            apply IHl' in H. auto.
+        (* First sub-goal *)
+        contradiction.
+        (* Remaining sub-goals *)
+        all: (simpl in H; simpl; apply IHl' in H; auto).
 Qed.
 
 (*
@@ -487,17 +438,10 @@ Proof.
     intros. induction l1 as [ | e l1' IHl1'].
     - simpl. simpl in H. destruct H. apply H0.
     - destruct e. destruct e.
-       simpl. simpl in H. destruct H. contradiction.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
-       simpl. simpl in H. destruct H. apply IHl1'. split. apply H. apply H0.
+        (* First sub-goal *)
+        simpl. simpl in H. destruct H. contradiction.
+        (* Remaining sub-goals *)
+        all: (simpl; simpl in H; destruct H; apply IHl1'; split; (apply H || apply H0)).
 Qed.
 
 (*
@@ -510,18 +454,11 @@ Theorem no_data_written_rev :
 Proof.
     intros. induction slice as [ | (s, e) l' IHl'].
     - simpl. reflexivity.
-    - simpl. simpl in H. apply no_data_written_rev_split in H. destruct e. 
-        + destruct H. simpl in H0. apply H0.
-        + apply IHl'. destruct H. apply H.
-        + apply IHl'. destruct H. apply H.
-        + apply IHl'. destruct H. apply H.
-        + apply IHl'. destruct H. apply H.
-        + apply IHl'. destruct H. apply H.
-        + apply IHl'. destruct H. apply H.
-        + apply IHl'. destruct H. apply H.
-        + apply IHl'. destruct H. apply H.
-        + apply IHl'. destruct H. apply H.
-        + apply IHl'. destruct H. apply H.
+    - simpl. simpl in H. apply no_data_written_rev_split in H. destruct e.
+        (* First sub-goal *)
+        destruct H. simpl in H0. apply H0.
+        (* Remaining sub-goals *)
+        all: (apply IHl'; destruct H; apply H).
 Qed.
 
 (*
@@ -556,17 +493,16 @@ Proof.
         reflexivity.
         apply IHl1'. split. destruct H. apply H1. apply H0. 
      + destruct p. destruct e0.
-       simpl. simpl in H. destruct H. destruct H. contradiction.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
-       simpl. simpl in H. destruct H. destruct H. split. apply H. apply IHl1'. split. apply H1. apply H0.
+       (* First sub-goal *)
+       (simpl; simpl in H; destruct H; destruct H; contradiction).
+       (* Remaining sub-goals *)
+       all: (simpl; 
+             simpl in H; 
+             destruct H; 
+             destruct H; 
+             split; (apply H || 
+                     apply IHl1'; 
+                     split; (apply H1 || apply H0))).
 Qed.
 
 (*
@@ -581,17 +517,13 @@ Proof.
     intros trace. induction trace as [ | e l' IHl'].
     - simpl. intros. apply H.
     - intros. destruct e.
-        + simpl. apply H.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
-        + simpl. apply IHl'. apply no_data_written_in_slice_proof_helper1. split. apply H. simpl. reflexivity.
+        (* First sub-goal *)
+        (simpl; apply H).
+        (* Remaining sub-goals *)
+        all: (simpl; 
+              apply IHl'; 
+              apply no_data_written_in_slice_proof_helper1; 
+              split; (apply H || simpl; reflexivity)).
 Qed.
 
 (*
@@ -606,18 +538,11 @@ Proof.
     intros trace. induction trace as [ | e l' IHl'].
     - simpl. intros. apply H.
     - intros. destruct e.
-     + simpl. apply IHl'. simpl. apply no_data_written_when_list_split_helper1. split. apply H. simpl. split. 
+       (* First sub-goal *)
+       simpl. apply IHl'. simpl. apply no_data_written_when_list_split_helper1. split. apply H. simpl. split. 
        apply no_data_written_in_slice_proof. simpl. reflexivity. reflexivity.
-     + simpl. apply IHl'. apply H.
-     + simpl. apply IHl'. apply H.
-     + simpl. apply IHl'. apply H.
-     + simpl. apply IHl'. apply H.
-     + simpl. apply IHl'. apply H.
-     + simpl. apply IHl'. apply H.
-     + simpl. apply IHl'. apply H.
-     + simpl. apply IHl'. apply H.
-     + simpl. apply IHl'. apply H.
-     + simpl. apply IHl'. apply H.
+       (* Remaining sub-goals *)
+       all: (simpl; apply IHl'; apply H).
 Qed.
 
 (*
