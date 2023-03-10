@@ -350,10 +350,8 @@ Theorem consumer_pays_once_slice : forall (slice : list (State * Event)),
     no_data_written_in_slice slice -> all_consumers_pay_once_slice slice.
 Proof.
     intros. induction slice as [ | (s, e) l' IHl'].
-    - simpl. reflexivity.
-    - destruct e ; try (simpl; apply IHl';
-                        unfold no_data_written_in_slice in H;
-                        fold no_data_written_in_slice in H; apply H).
+    - auto.
+    - destruct e ; try auto.
      + simpl. inversion H.
      + simpl. split.
       * intros. split. 
@@ -441,7 +439,7 @@ Proof.
         (* First sub-goal *)
         simpl. simpl in H. destruct H. contradiction.
         (* Remaining sub-goals *)
-        all: (simpl; simpl in H; destruct H; apply IHl1'; split; (apply H || apply H0)).
+        all: (simpl; simpl in H; destruct H; apply IHl1'; auto).
 Qed.
 
 (*
@@ -453,7 +451,7 @@ Theorem no_data_written_rev :
     no_data_written_in_slice (rev slice) -> no_data_written_in_slice slice.
 Proof.
     intros. induction slice as [ | (s, e) l' IHl'].
-    - simpl. reflexivity.
+    - auto.
     - simpl. simpl in H. apply no_data_written_rev_split in H. destruct e.
         (* First sub-goal *)
         destruct H. simpl in H0. apply H0.
@@ -471,7 +469,7 @@ Theorem consumers_pay_once :
 
 Proof.
     intros. induction splitList as [ | x l' IHl'].
-    - simpl. reflexivity.
+    - auto.
     - simpl. split.
       simpl in H. destruct H. apply consumer_pays_once_slice. apply no_data_written_rev. rewrite -> rev_involutive. apply H.
       apply IHl'. simpl in H. destruct H. apply H0.
@@ -499,10 +497,7 @@ Proof.
        all: (simpl; 
              simpl in H; 
              destruct H; 
-             destruct H; 
-             split; (apply H || 
-                     apply IHl1'; 
-                     split; (apply H1 || apply H0))).
+             destruct H; auto).
 Qed.
 
 (*
@@ -522,7 +517,7 @@ Proof.
         (* Remaining sub-goals *)
         all: (simpl; 
               apply IHl'; 
-              apply no_data_written_in_slice_proof_helper1; 
+              apply no_data_written_in_slice_proof_helper1;
               split; (apply H || simpl; reflexivity)).
 Qed.
 
