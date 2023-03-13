@@ -100,7 +100,7 @@ Proof.
     + simpl. unfold write_data. case_eq (compare_address owner caller).
         intros. simpl. rewrite -> H0. unfold get_consumers. simpl. unfold get_consumers in H. simpl in H. apply H.
         intros. simpl. rewrite -> H0. unfold get_consumers. simpl. unfold get_consumers in H. simpl in H. apply H.
-    + simpl. unfold read_data. simpl. simpl.
+    + simpl. unfold read_data. simpl.
       case_eq (credit (get_consumer_info allConsumers consumer) <?
       fee_of consumer
       (Datatypes.weight (get_consumer_info allConsumers consumer))
