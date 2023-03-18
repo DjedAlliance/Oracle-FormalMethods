@@ -30,12 +30,6 @@ Inductive Event : Type :=
 
 Definition Trace : Type := list (Event).
 
-Definition Credit         := nat.
-Definition LatestRead     := nat.
-Definition Weight         := nat.
-Definition WeightNext     := nat.
-Definition WeightTimeLock := nat.
-
 Record ConsumerInfo :=
 {
     credit         : nat;
@@ -45,43 +39,29 @@ Record ConsumerInfo :=
     weightTimeLock : nat
 }.
 
-Definition Owner          := address.
-Definition Data           := float.
-Definition TimeStamp      := nat.
-Definition TotalCost      := nat.
-Definition TotalRevenue   := nat.
-Definition Writes         := nat.
-Definition Reads          := nat.
-Definition BaseFee        := nat.
-Definition MaxFee         := nat.
-Definition MaxFeeNext     := nat.
-Definition MaxFeeTimeLock := nat.
-Definition LatestCost     := nat.
-Definition LatestWrite    := nat.
-Definition TotalCredit    := nat.
 Definition AllConsumers   := list (address * ConsumerInfo).
 
 Record OracleState :=
 {
-    data           : Data;
-    timeStamp      : TimeStamp;
-    totalCost      : TotalCost;
-    totalRevenue   : TotalRevenue;
-    writes         : Writes;
-    reads          : Reads;
-    baseFee        : BaseFee;
-    maxFee         : MaxFee;
-    maxFeeNext     : MaxFeeNext;
-    maxFeeTimeLock : MaxFeeTimeLock;
-    latestCost     : LatestCost;
-    latestWrite    : LatestWrite;
-    totalCredit    : TotalCredit;
+    data           : float;
+    timeStamp      : nat;
+    totalCost      : nat;
+    totalRevenue   : nat;
+    writes         : nat;
+    reads          : nat;
+    baseFee        : nat;
+    maxFee         : nat;
+    maxFeeNext     : nat;
+    maxFeeTimeLock : nat;
+    latestCost     : nat;
+    latestWrite    : nat;
+    totalCredit    : nat;
     allConsumers   : AllConsumers
 }.
 
 Record OracleParameters :=
 {
-    owner         : Owner;
+    owner         : address;
     description   : string;
     lockingPeriod : nat
 }.

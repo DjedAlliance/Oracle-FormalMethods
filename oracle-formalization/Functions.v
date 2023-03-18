@@ -18,13 +18,13 @@ Definition get_total_revenue (state : State) : nat :=
 Definition get_consumers (state : State) : AllConsumers :=
     state.(oracleState).(allConsumers).
 
-Definition get_latest_write (state : State) : LatestWrite :=
+Definition get_latest_write (state : State) : nat :=
     state.(oracleState).(latestWrite).
 
-Definition get_base_fee (state : State) : BaseFee :=
+Definition get_base_fee (state : State) : nat :=
     state.(oracleState).(baseFee).
 
-Definition get_owner (state : State) : Owner :=
+Definition get_owner (state : State) : address :=
     state.(oracleParameters).(owner).
 
 Definition get_description (state : State) : string :=
