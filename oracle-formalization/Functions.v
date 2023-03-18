@@ -103,7 +103,7 @@ Definition write_data (state : State)
     if compare_address oldOracleParams.(owner) caller
     then
         let newOracleState := Build_OracleState newData 
-                                                (oldOracleState.(timeStamp) + 1) 
+                                                (oldOracleState.(time) + 1) 
                                                 (oldOracleState.(totalCost) + newCost) 
                                                 oldOracleState.(totalRevenue)
                                                 (oldOracleState.(writes) + 1) 
@@ -113,7 +113,7 @@ Definition write_data (state : State)
                                                 oldOracleState.(maxFeeNext) 
                                                 oldOracleState.(maxFeeTimeLock) 
                                                 newCost 
-                                                (oldOracleState.(timeStamp) + 1) 
+                                                (oldOracleState.(time) + 1) 
                                                 oldOracleState.(totalCredit)
                                                 oldOracleState.(allConsumers)
         in
@@ -167,7 +167,7 @@ Definition read_data (state : State) (consumer : address) : (State * option floa
         then (state, None)
         else
             let newConsumerInfo := Build_ConsumerInfo (credit - fee) 
-                                                      (oldOracleState.(timeStamp) + 1) 
+                                                      (oldOracleState.(time) + 1) 
                                                       weight 
                                                       consumerInfo.(weightNext) 
                                                       consumerInfo.(weightTimeLock)
@@ -179,7 +179,7 @@ Definition read_data (state : State) (consumer : address) : (State * option floa
                                        nil
             in
             let newOracleState := Build_OracleState data
-                                                    (oldOracleState.(timeStamp) + 1) 
+                                                    (oldOracleState.(time) + 1) 
                                                     oldOracleState.(totalCost)
                                                     (oldOracleState.(totalRevenue) + fee) 
                                                     oldOracleState.(writes) 
@@ -233,7 +233,7 @@ Definition schedule_weight_adjustment (consumer : address)
                                         nil
         in
         let newOracleState := Build_OracleState oldOracleState.(data)
-                                                oldOracleState.(timeStamp)
+                                                oldOracleState.(time)
                                                 oldOracleState.(totalCost)
                                                 oldOracleState.(totalRevenue)
                                                 oldOracleState.(writes)
@@ -284,7 +284,7 @@ Definition adjust_weight (consumer : address) (caller : address) (blockTimeStamp
                                                 nil
                 in
                 let newOracleState := Build_OracleState oldOracleState.(data)
-                                                        oldOracleState.(timeStamp)
+                                                        oldOracleState.(time)
                                                         oldOracleState.(totalCost)
                                                         oldOracleState.(totalRevenue)
                                                         oldOracleState.(writes)
@@ -317,7 +317,7 @@ Definition schedule_max_fee_adjustment (maxFeeNextNew : nat)
     if compare_address oldOracleParams.(owner) caller
     then
         let newOracleState := Build_OracleState oldOracleState.(data)
-                                                oldOracleState.(timeStamp)
+                                                oldOracleState.(time)
                                                 oldOracleState.(totalCost)
                                                 oldOracleState.(totalRevenue)
                                                 oldOracleState.(writes)
@@ -355,7 +355,7 @@ Definition adjust_max_fee (caller : address) (blockTimeStamp : nat) (state : Sta
             state
         else
             let newOracleState := Build_OracleState oldOracleState.(data)
-                                                    oldOracleState.(timeStamp)
+                                                    oldOracleState.(time)
                                                     oldOracleState.(totalCost)
                                                     oldOracleState.(totalRevenue)
                                                     oldOracleState.(writes)
@@ -409,7 +409,7 @@ Definition adjust_base_fee (caller : address) (state : State) : State :=
                      maxFee 
         in
         let newOracleState := Build_OracleState oldOracleState.(data)
-                                                oldOracleState.(timeStamp)
+                                                oldOracleState.(time)
                                                 totalCost
                                                 totalRevenue
                                                 0
@@ -454,7 +454,7 @@ Definition deposit_credit (consumer : address) (state : State) (deposit : nat) :
                           nil
     in
     let newOracleState := Build_OracleState oldOracleState.(data)
-                                            oldOracleState.(timeStamp)
+                                            oldOracleState.(time)
                                             oldOracleState.(totalCost)
                                             oldOracleState.(totalRevenue)
                                             oldOracleState.(writes)
@@ -498,7 +498,7 @@ Definition withdraw_credit (amount : nat) (caller : address) (state : State) : S
                                     nil
     in
     let newOracleState := Build_OracleState oldOracleState.(data)
-                                            oldOracleState.(timeStamp)
+                                            oldOracleState.(time)
                                             oldOracleState.(totalCost)
                                             oldOracleState.(totalRevenue)
                                             oldOracleState.(writes)
@@ -531,7 +531,7 @@ Definition withdraw (receiver : address) (amount : nat) (caller : address) (stat
             state
         else
             let newOracleState := Build_OracleState oldOracleState.(data)
-                                                    oldOracleState.(timeStamp)
+                                                    oldOracleState.(time)
                                                     oldOracleState.(totalCost)
                                                     (oldOracleState.(totalRevenue) - amount) 
                                                     oldOracleState.(writes)
@@ -567,7 +567,7 @@ Definition reset_cost_and_revenue (state : State) : State :=
     in
     let newOracleState := Build_OracleState oldOracleState.(data)
                                             newTotalCost
-                                            oldOracleState.(timeStamp)
+                                            oldOracleState.(time)
                                             newTotalRevenue
                                             oldOracleState.(writes)
                                             oldOracleState.(reads)
@@ -593,13 +593,13 @@ Definition execute (state : State) (event : Event) : State :=
     | DataRead consumer _ _ => 
         let (newState, _) := read_data state consumer
         in newState
-    | WeightAdjustmentScheduled consumer caller weightNext timeStamp _ => 
-        schedule_weight_adjustment consumer caller weightNext timeStamp state
-    | WeightAdjusted consumer caller timeStamp _ => 
-        adjust_weight consumer caller timeStamp state
-    | MaxFeeAdjustmentScheduled maxFeeNextNew caller timeStamp _ => 
-        schedule_max_fee_adjustment maxFeeNextNew caller timeStamp state
-    | MaxFeeAdjusted caller timeStamp _ => adjust_max_fee caller timeStamp state
+    | WeightAdjustmentScheduled consumer caller weightNext time _ => 
+        schedule_weight_adjustment consumer caller weightNext time state
+    | WeightAdjusted consumer caller time _ => 
+        adjust_weight consumer caller time state
+    | MaxFeeAdjustmentScheduled maxFeeNextNew caller time _ => 
+        schedule_max_fee_adjustment maxFeeNextNew caller time state
+    | MaxFeeAdjusted caller time _ => adjust_max_fee caller time state
     | BaseFeeAdjusted caller _ _ _ => adjust_base_fee caller state
     | CreditDeposited consumer deposit => deposit_credit consumer state deposit
     | CreditWithdrawn amount caller => withdraw_credit amount caller state

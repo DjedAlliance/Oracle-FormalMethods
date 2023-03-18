@@ -44,7 +44,7 @@ Definition AllConsumers   := list (address * ConsumerInfo).
 Record OracleState :=
 {
     data           : float;
-    timeStamp      : nat;
+    time           : nat;
     totalCost      : nat;
     totalRevenue   : nat;
     writes         : nat;

@@ -119,7 +119,7 @@ Proof.
             simpl. reflexivity.
             intros. simpl. simpl in H. apply H.
     + simpl. unfold adjust_weight. simpl. case_eq (compare_address owner caller).
-      case_eq (timeStamp0 <? weightTimeLock (get_consumer_info allConsumers consumer)).
+      case_eq (timeStamp <? weightTimeLock (get_consumer_info allConsumers consumer)).
         intros. simpl. simpl in H. apply H.
         intros. simpl. apply credit_non_negative_helper1.
             unfold credit_non_negative_single_consumer.
@@ -131,7 +131,7 @@ Proof.
         intros. simpl. simpl in H. apply H.
         intros. simpl. simpl in H. apply H.
     + simpl. unfold adjust_max_fee. simpl. case_eq (compare_address owner caller).
-        intros. case_eq (timeStamp0 <? maxFeeTimeLock).
+        intros. case_eq (timeStamp <? maxFeeTimeLock).
             intros. simpl. simpl in H. apply H.
             intros. simpl. simpl in H. apply H.
         intros. simpl. simpl in H. apply H.
